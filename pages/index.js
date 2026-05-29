@@ -450,7 +450,14 @@ function ScreenOCR({ setScreen, setSelectedInvoice, toast }) {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
       setResult(data);
-      toast('Invoice extracted and saved!', 'success');
+      if (data.autoMatch) {
+        const { poNo, hasMismatch, allExact } = data.autoMatch;
+        if (allExact) toast(`Auto-matched to ${poNo} — exact match ✓`, 'success');
+        else if (hasMismatch) toast(`Auto-matched to ${poNo} — rate/qty differences found`, 'warning');
+        else toast(`Auto-matched to ${poNo}`, 'success');
+      } else {
+        toast('Invoice saved — no matching PO found', 'info');
+      }
     } catch (e) {
       setError(e.message);
     }

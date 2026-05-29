@@ -2,33 +2,7 @@ import { dbConnect } from '../../../lib/mongodb';
 import Invoice from '../../../models/Invoice';
 import PO from '../../../models/PO';
 import GRN from '../../../models/GRN';
-
-function matchLines(poItems, invItems) {
-  return invItems.map((invLine, i) => {
-    const poLine = poItems[i] || poItems.find(
-      p => p.hsnCode && p.hsnCode === invLine.hsnCode
-    ) || poItems.find(
-      p => p.description?.toLowerCase().includes(invLine.description?.toLowerCase()?.split(' ')[0])
-    );
-
-    if (!poLine) return { invLine, poLine: null, match: 'missing', diffs: [] };
-
-    const diffs = [];
-    const qtyDiff = invLine.qty - poLine.qty;
-    const rateDiff = invLine.rate - poLine.rate;
-    const ratePct = poLine.rate ? Math.abs(rateDiff / poLine.rate * 100) : 0;
-
-    if (Math.abs(qtyDiff) > 0.001) diffs.push({ field: 'qty', po: poLine.qty, inv: invLine.qty, delta: qtyDiff });
-    if (ratePct > 1) diffs.push({ field: 'rate', po: poLine.rate, inv: invLine.rate, delta: rateDiff, pct: ratePct.toFixed(1) });
-
-    return {
-      invLine,
-      poLine,
-      match: diffs.length === 0 ? 'exact' : ratePct > 5 || Math.abs(qtyDiff / poLine.qty) > 0.05 ? 'mismatch' : 'tolerance',
-      diffs,
-    };
-  });
-}
+import { matchLines } from '../../../lib/autoMatch';
 
 function threeWayCheck(po, invoice, grn) {
   const checks = [];

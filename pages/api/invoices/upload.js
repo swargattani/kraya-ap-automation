@@ -4,6 +4,7 @@ import { dbConnect } from '../../../lib/mongodb';
 import Invoice from '../../../models/Invoice';
 import Vendor from '../../../models/Vendor';
 import { parseInvoiceText } from '../../../lib/parseInvoice';
+import { autoMatchPO } from '../../../lib/autoMatch';
 
 export const config = { api: { bodyParser: false } };
 
@@ -77,7 +78,7 @@ export default async function handler(req, res) {
 
     const vendor = await findOrCreateVendor(parsed);
 
-    const invoice = await Invoice.create({
+    const invoiceData = {
       irn: parsed.irn,
       invoiceNo: parsed.invoiceNo || `OCR-${Date.now()}`,
       invoiceDate: parsed.invoiceDate,
@@ -98,13 +99,31 @@ export default async function handler(req, res) {
       ocrRaw: rawText,
       ocrConfidence: parsed.confidence,
       fileName: file.originalFilename,
+      poRef: parsed.poRef,
       status: 'pending',
       matchStatus: 'unmatched',
-    });
+    };
+
+    const invoice = await Invoice.create(invoiceData);
+
+    // Auto-match against open POs immediately after save
+    let matchResult = null;
+    try {
+      matchResult = await autoMatchPO({ ...invoiceData, _id: invoice._id });
+    } catch (_) { /* non-fatal — invoice still saved */ }
 
     fs.unlinkSync(file.filepath);
 
-    return res.status(201).json({ invoice, parsed });
+    return res.status(201).json({
+      invoice,
+      parsed,
+      autoMatch: matchResult ? {
+        poNo: matchResult.po.poNo,
+        hasMismatch: matchResult.hasMismatch,
+        allExact: matchResult.allExact,
+        lineCount: matchResult.lineMatches.length,
+      } : null,
+    });
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Upload failed' });
   }
