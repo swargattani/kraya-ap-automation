@@ -1,6 +1,5 @@
 import formidable from 'formidable';
 import fs from 'fs';
-import path from 'path';
 import { dbConnect } from '../../../lib/mongodb';
 import Invoice from '../../../models/Invoice';
 import Vendor from '../../../models/Vendor';
@@ -10,26 +9,20 @@ export const config = { api: { bodyParser: false } };
 
 async function extractText(filePath, mimeType) {
   if (mimeType === 'application/pdf') {
-    try {
-      const pdfParse = (await import('pdf-parse')).default;
-      const buffer = fs.readFileSync(filePath);
-      const data = await pdfParse(buffer);
-      return data.text;
-    } catch {
-      return '';
-    }
+    // Use lib/pdf-parse.js directly to bypass the buggy index.js
+    // that tries to read a test file from disk on serverless cold starts
+    const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default;
+    const buffer = fs.readFileSync(filePath);
+    const data = await pdfParse(buffer);
+    return data.text;
   }
 
   // Image: use Tesseract
-  try {
-    const Tesseract = await import('tesseract.js');
-    const worker = await Tesseract.createWorker('eng');
-    const { data } = await worker.recognize(filePath);
-    await worker.terminate();
-    return data.text;
-  } catch {
-    return '';
-  }
+  const Tesseract = await import('tesseract.js');
+  const worker = await Tesseract.createWorker('eng');
+  const { data } = await worker.recognize(filePath);
+  await worker.terminate();
+  return data.text;
 }
 
 async function findOrCreateVendor(parsed) {
@@ -37,7 +30,7 @@ async function findOrCreateVendor(parsed) {
 
   const filter = parsed.vendorGSTIN
     ? { gstin: parsed.vendorGSTIN }
-    : { name: new RegExp('^' + parsed.vendorName + '$', 'i') };
+    : { name: new RegExp('^' + parsed.vendorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') };
 
   let vendor = await Vendor.findOne(filter);
   if (!vendor) {
@@ -55,56 +48,64 @@ export default async function handler(req, res) {
     return res.status(405).end();
   }
 
-  await dbConnect();
+  try {
+    await dbConnect();
 
-  const form = formidable({ maxFileSize: 20 * 1024 * 1024, keepExtensions: true });
-  const [, files] = await form.parse(req);
+    const form = formidable({ maxFileSize: 20 * 1024 * 1024, keepExtensions: true });
+    const [, files] = await form.parse(req);
 
-  const file = Array.isArray(files.file) ? files.file[0] : files.file;
-  if (!file) return res.status(400).json({ error: 'No file uploaded' });
+    const file = Array.isArray(files.file) ? files.file[0] : files.file;
+    if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
-  const rawText = await extractText(file.filepath, file.mimetype);
-  const parsed = parseInvoiceText(rawText);
+    let rawText = '';
+    try {
+      rawText = await extractText(file.filepath, file.mimetype);
+    } catch (e) {
+      fs.unlinkSync(file.filepath);
+      return res.status(422).json({ error: `Text extraction failed: ${e.message}` });
+    }
 
-  // Reject obvious failures
-  if (!parsed.invoiceNo && !parsed.irn && !parsed.totalAmount) {
-    fs.unlinkSync(file.filepath);
-    return res.status(422).json({
-      error: 'Could not extract invoice data — try a cleaner scan or enter manually',
-      raw: rawText.slice(0, 500),
+    const parsed = parseInvoiceText(rawText);
+
+    if (!parsed.invoiceNo && !parsed.irn && !parsed.totalAmount) {
+      fs.unlinkSync(file.filepath);
+      return res.status(422).json({
+        error: 'Could not extract invoice data — try a cleaner scan or enter manually',
+        raw: rawText.slice(0, 500),
+      });
+    }
+
+    const vendor = await findOrCreateVendor(parsed);
+
+    const invoice = await Invoice.create({
+      irn: parsed.irn,
+      invoiceNo: parsed.invoiceNo || `OCR-${Date.now()}`,
+      invoiceDate: parsed.invoiceDate,
+      vendorId: vendor?._id,
+      vendorName: parsed.vendorName || vendor?.name,
+      vendorGSTIN: parsed.vendorGSTIN,
+      buyerGSTIN: parsed.buyerGSTIN,
+      placeOfSupply: parsed.placeOfSupply,
+      items: parsed.items,
+      subtotal: parsed.subtotal,
+      totalCGST: parsed.totalCGST,
+      totalSGST: parsed.totalSGST,
+      totalIGST: parsed.totalIGST,
+      tds: parsed.tds,
+      totalAmount: parsed.totalAmount,
+      netPayable: parsed.netPayable,
+      source: 'ocr',
+      ocrRaw: rawText,
+      ocrConfidence: parsed.confidence,
+      fileName: file.originalFilename,
+      status: 'pending',
+      matchStatus: 'unmatched',
     });
+
+    fs.unlinkSync(file.filepath);
+
+    return res.status(201).json({ invoice, parsed });
+  } catch (e) {
+    return res.status(500).json({ error: e.message || 'Upload failed' });
   }
-
-  const vendor = await findOrCreateVendor(parsed);
-
-  const invoiceData = {
-    irn: parsed.irn,
-    invoiceNo: parsed.invoiceNo || `OCR-${Date.now()}`,
-    invoiceDate: parsed.invoiceDate,
-    vendorId: vendor?._id,
-    vendorName: parsed.vendorName || vendor?.name,
-    vendorGSTIN: parsed.vendorGSTIN,
-    buyerGSTIN: parsed.buyerGSTIN,
-    placeOfSupply: parsed.placeOfSupply,
-    items: parsed.items,
-    subtotal: parsed.subtotal,
-    totalCGST: parsed.totalCGST,
-    totalSGST: parsed.totalSGST,
-    totalIGST: parsed.totalIGST,
-    tds: parsed.tds,
-    totalAmount: parsed.totalAmount,
-    netPayable: parsed.netPayable,
-    source: 'ocr',
-    ocrRaw: rawText,
-    ocrConfidence: parsed.confidence,
-    fileName: file.originalFilename,
-    status: 'pending',
-    matchStatus: 'unmatched',
-  };
-
-  const invoice = await Invoice.create(invoiceData);
-
-  fs.unlinkSync(file.filepath);
-
-  return res.status(201).json({ invoice, parsed });
 }
