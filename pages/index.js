@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
+import { useSession, signOut } from 'next-auth/react';
 
 // ─── Icons (inline SVG) ────────────────────────────────────────────────────
 function Icon({ n, size = 16 }) {
@@ -110,19 +111,23 @@ function Confirm({ open, title, body, onConfirm, onCancel }) {
 }
 
 // ─── Sidebar ────────────────────────────────────────────────────────────────
+const ROLE_COLORS = { admin: '#9B59B6', accounts: '#1A7A4A', purchase: '#1A4FA0', stores: '#C47A0A' };
+
 const NAV = [
-  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Overview' },
-  { id: 'inbox', label: 'E-Invoice Inbox', icon: 'inbox', section: 'Capture' },
-  { id: 'ocr', label: 'OCR Upload', icon: 'upload' },
-  { id: 'pos', label: 'Purchase Orders', icon: 'po', section: 'Procurement' },
-  { id: 'grns', label: 'Goods Receipts', icon: 'grn' },
-  { id: 'vendors', label: 'Vendors', icon: 'vendors' },
-  { id: 'match', label: 'PO Matching', icon: 'match', section: 'Verification' },
-  { id: 'threeway', label: '3-Way Match', icon: 'check3' },
-  { id: 'register', label: 'AP Register', icon: 'register', section: 'Payables' },
+  { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Overview', roles: null },
+  { id: 'inbox', label: 'E-Invoice Inbox', icon: 'inbox', section: 'Capture', roles: ['admin', 'accounts'] },
+  { id: 'ocr', label: 'OCR Upload', icon: 'upload', roles: ['admin', 'accounts'] },
+  { id: 'pos', label: 'Purchase Orders', icon: 'po', section: 'Procurement', roles: null },
+  { id: 'grns', label: 'Goods Receipts', icon: 'grn', roles: null },
+  { id: 'vendors', label: 'Vendors', icon: 'vendors', roles: null },
+  { id: 'match', label: 'PO Matching', icon: 'match', section: 'Verification', roles: ['admin', 'accounts'] },
+  { id: 'threeway', label: '3-Way Match', icon: 'check3', roles: ['admin', 'accounts'] },
+  { id: 'register', label: 'AP Register', icon: 'register', section: 'Payables', roles: ['admin', 'accounts'] },
+  { id: 'users', label: 'Team', icon: 'vendors', section: 'Admin', roles: ['admin'] },
 ];
 
-function Sidebar({ screen, setScreen, counts }) {
+function Sidebar({ screen, setScreen, counts, role }) {
+  const visibleNav = NAV.filter(item => !item.roles || item.roles.includes(role));
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -134,7 +139,7 @@ function Sidebar({ screen, setScreen, counts }) {
         <div className="sidebar-org-gstin">27AAACH1234I1Z0</div>
       </div>
       <nav className="sidebar-nav">
-        {NAV.map(item => (
+        {visibleNav.map(item => (
           <div key={item.id}>
             {item.section && <div className="nav-section">{item.section}</div>}
             <div
@@ -150,7 +155,7 @@ function Sidebar({ screen, setScreen, counts }) {
           </div>
         ))}
       </nav>
-      <div className="sidebar-footer">v1.0 · No auth mode</div>
+      <div className="sidebar-footer">v1.0 · Kraya AP</div>
     </div>
   );
 }
@@ -1623,8 +1628,147 @@ function ScreenRegister({ toast }) {
   );
 }
 
+// ─── Team / User Management ──────────────────────────────────────────────────
+function ScreenUsers({ toast }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState({ name: '', email: '', password: '', role: 'accounts' });
+
+  const load = async () => {
+    setLoading(true);
+    try { setUsers(await api('/api/users')); } catch {}
+    setLoading(false);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    try {
+      await api('/api/users', { method: 'POST', body: form });
+      toast('Team member added!', 'success');
+      setShowForm(false);
+      setForm({ name: '', email: '', password: '', role: 'accounts' });
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  const deactivate = async (id) => {
+    try {
+      await api(`/api/users/${id}`, { method: 'DELETE' });
+      toast('User deactivated', 'success');
+      load();
+    } catch (e) { toast(e.message, 'error'); }
+  };
+
+  const roleColors = { admin: 'var(--purple)', accounts: 'var(--green)', purchase: 'var(--blue)', stores: 'var(--amber)' };
+  const roleLabels = { admin: 'Admin', accounts: 'Accounts', purchase: 'Purchase', stores: 'Stores' };
+  const roleAccess = {
+    admin: 'Full access + user management',
+    accounts: 'Invoice inbox, OCR, matching, AP register',
+    purchase: 'View/create POs, view invoices',
+    stores: 'Create/approve GRNs, view invoices',
+  };
+
+  if (loading) return <div className="loading"><div className="spinner" /></div>;
+
+  return (
+    <div>
+      <div className="page-head">
+        <h1>Team</h1>
+        <p>{users.length} active members</p>
+      </div>
+      <div className="toolbar">
+        <div className="toolbar-right">
+          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>
+            <Icon n="plus" size={13} /> Add Member
+          </button>
+        </div>
+      </div>
+
+      <div className="two-col" style={{ marginBottom: 24 }}>
+        {['accounts', 'purchase', 'stores', 'admin'].map(role => (
+          <div key={role} className="card card-sm">
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: roleColors[role] }} />
+              <span style={{ fontWeight: 600, fontSize: 13 }}>{roleLabels[role]}</span>
+              <span style={{ marginLeft: 'auto', fontFamily: 'var(--mono)', fontSize: 12 }}>
+                {users.filter(u => u.role === role).length}
+              </span>
+            </div>
+            <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>{roleAccess[role]}</div>
+          </div>
+        ))}
+      </div>
+
+      {showForm && (
+        <div className="modal-overlay" onClick={() => setShowForm(false)}>
+          <div className="modal" style={{ maxWidth: 420 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <span className="modal-title">Add Team Member</span>
+              <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}><Icon n="x" size={14} /></button>
+            </div>
+            <form onSubmit={submit}>
+              <div className="modal-body">
+                <div className="form-group"><label className="form-label">Full Name *</label><input className="form-control" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Email *</label><input className="form-control" type="email" required value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
+                <div className="form-group"><label className="form-label">Password *</label><input className="form-control" type="password" required minLength={8} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Min 8 characters" /></div>
+                <div className="form-group">
+                  <label className="form-label">Role *</label>
+                  <select className="form-control" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))}>
+                    <option value="accounts">Accounts</option>
+                    <option value="purchase">Purchase</option>
+                    <option value="stores">Stores</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>{roleAccess[form.role]}</div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
+                <button type="submit" className="btn btn-primary">Add Member</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      <div className="card" style={{ padding: 0 }}>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Added</th><th></th></tr></thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u._id}>
+                  <td style={{ fontWeight: 600 }}>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
+                      <span style={{ width: 6, height: 6, borderRadius: '50%', background: roleColors[u.role] }} />
+                      {roleLabels[u.role]}
+                    </span>
+                  </td>
+                  <td style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{fmtDate(u.createdAt)}</td>
+                  <td>
+                    <button className="btn btn-ghost btn-sm" style={{ color: 'var(--red)' }} onClick={() => deactivate(u._id)}>
+                      <Icon n="trash" size={13} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {users.length === 0 && <tr><td colSpan={5} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>No team members yet</td></tr>}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── App Shell ────────────────────────────────────────────────────────────────
 export default function App() {
+  const { data: session } = useSession();
   const [screen, setScreen] = useState('dashboard');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [matchInvoice, setMatchInvoice] = useState(null);
@@ -1632,6 +1776,7 @@ export default function App() {
   const [toast, setToast] = useState({ msg: '', type: '' });
 
   const showToast = (msg, type = 'info') => setToast({ msg, type });
+  const role = session?.user?.role || 'accounts';
 
   useEffect(() => {
     const loadCounts = async () => {
@@ -1663,6 +1808,7 @@ export default function App() {
       case 'grns': return <ScreenGRNs toast={showToast} />;
       case 'vendors': return <ScreenVendors toast={showToast} />;
       case 'register': return <ScreenRegister toast={showToast} />;
+      case 'users': return <ScreenUsers toast={showToast} />;
       default: return <ScreenDashboard setScreen={setScreen} toast={showToast} />;
     }
   };
@@ -1670,8 +1816,11 @@ export default function App() {
   const screenTitles = {
     dashboard: 'Dashboard', inbox: 'E-Invoice Inbox', ocr: 'OCR Upload',
     invoice_detail: 'Invoice Detail', match: 'PO Matching', threeway: '3-Way Match',
-    pos: 'Purchase Orders', grns: 'Goods Receipts', vendors: 'Vendors', register: 'AP Register',
+    pos: 'Purchase Orders', grns: 'Goods Receipts', vendors: 'Vendors',
+    register: 'AP Register', users: 'Team',
   };
+
+  const roleColors = { admin: 'var(--purple)', accounts: 'var(--green)', purchase: 'var(--blue)', stores: 'var(--amber)' };
 
   return (
     <>
@@ -1681,14 +1830,30 @@ export default function App() {
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>K</text></svg>" />
       </Head>
       <div className="app-shell">
-        <Sidebar screen={screen} setScreen={(s) => { setScreen(s); }} counts={counts} />
+        <Sidebar screen={screen} setScreen={(s) => { setScreen(s); }} counts={counts} role={role} />
         <div className="main-area">
           <div className="topbar">
             <span className="topbar-title">{screenTitles[screen] || 'AP Automation'}</span>
             <div className="topbar-actions">
-              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>
-                FY 2024–25
-              </span>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>FY 2024–25</span>
+              {session && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginLeft: 12, paddingLeft: 12, borderLeft: '1px solid var(--border)' }}>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-primary)' }}>{session.user.name}</div>
+                    <div style={{ fontSize: 10, color: roleColors[role], fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{role}</div>
+                  </div>
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => signOut({ callbackUrl: '/login' })}
+                    title="Sign out"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           <div className="content">
