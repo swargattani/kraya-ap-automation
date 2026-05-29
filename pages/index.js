@@ -475,7 +475,7 @@ function ScreenOCR({ setScreen, setSelectedInvoice, toast }) {
     <div>
       <div className="page-head">
         <h1>OCR Upload</h1>
-        <p>Upload invoice PDF or image — fields extracted automatically</p>
+        <p>Upload invoice PDF, image, text file, or NIC e-invoice JSON — fields extracted automatically</p>
       </div>
 
       {!result && (
@@ -486,7 +486,7 @@ function ScreenOCR({ setScreen, setSelectedInvoice, toast }) {
           onDrop={onDrop}
           onClick={() => fileRef.current?.click()}
         >
-          <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.webp" style={{ display: 'none' }}
+          <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.tiff,.webp,.txt,.html,.htm,.json" style={{ display: 'none' }}
             onChange={e => e.target.files[0] && doUpload(e.target.files[0])} />
           <div className="upload-icon">
             <Icon n="upload" size={24} />
@@ -500,7 +500,7 @@ function ScreenOCR({ setScreen, setSelectedInvoice, toast }) {
           ) : (
             <>
               <h3>Drop invoice here or click to browse</h3>
-              <p>PDF, JPG, PNG · Max 20 MB</p>
+              <p>PDF, JPG, PNG, TXT, HTML, JSON · Max 20 MB</p>
               <p style={{ marginTop: 8, fontSize: 12, color: 'var(--text-muted)' }}>
                 Extracts: Invoice No, GSTIN, Date, HSN codes, CGST/SGST/IGST, Total Amount
               </p>

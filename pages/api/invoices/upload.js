@@ -8,8 +8,91 @@ import { autoMatchPO } from '../../../lib/autoMatch';
 
 export const config = { api: { bodyParser: false } };
 
-async function extractText(filePath, mimeType) {
-  if (mimeType === 'application/pdf') {
+// Parse NIC / IRP e-invoice JSON directly into invoice fields — no OCR needed
+function parseEInvoiceJSON(raw) {
+  let obj;
+  try { obj = JSON.parse(raw); } catch { return null; }
+
+  // Handle both raw JSON and the signed payload wrapper { SignedInvoice: '...' }
+  const data = obj.SignedInvoice ? (() => {
+    try {
+      const parts = obj.SignedInvoice.split('.');
+      const payload = Buffer.from(parts[1], 'base64url').toString('utf8');
+      return JSON.parse(payload);
+    } catch { return null; }
+  })() : obj;
+  if (!data) return null;
+
+  const doc    = data.DocDtls   || {};
+  const seller = data.SellerDtls || {};
+  const buyer  = data.BuyerDtls  || {};
+  const val    = data.ValDtls    || {};
+  const items  = (data.ItemList  || []).map(it => ({
+    hsnCode:     String(it.HsnCd || ''),
+    description: it.PrdDesc || '',
+    qty:         Number(it.Qty)       || 0,
+    unit:        it.Unit              || 'NOS',
+    rate:        Number(it.UnitPrice) || 0,
+    amount:      Number(it.TotAmt)    || 0,
+  }));
+
+  // Parse DD/MM/YYYY date
+  let invoiceDate = null;
+  if (doc.Dt) {
+    const [d, m, y] = doc.Dt.split('/');
+    const dt = new Date(`${y}-${m}-${d}`);
+    if (!isNaN(dt)) invoiceDate = dt;
+  }
+
+  return {
+    irn:           (obj.Irn || data.Irn || '').toLowerCase() || null,
+    invoiceNo:     doc.No   || null,
+    invoiceDate,
+    vendorName:    seller.LglNm  || seller.TrdNm || null,
+    vendorGSTIN:   seller.Gstin  || null,
+    buyerGSTIN:    buyer.Gstin   || null,
+    placeOfSupply: data.TranDtls?.Pos || null,
+    poRef:         data.RefDtls?.InvRm || null,
+    subtotal:      Number(val.AssVal)    || null,
+    totalCGST:     Number(val.CgstVal)   || null,
+    totalSGST:     Number(val.SgstVal)   || null,
+    totalIGST:     Number(val.IgstVal)   || null,
+    tds:           Number(val.TdsTcsVal) || null,
+    totalAmount:   Number(val.TotInvVal) || null,
+    netPayable:    Number(val.TotInvVal) || null,
+    items,
+    confidence:    90, // structured data — high confidence
+    _source:       'json',
+  };
+}
+
+async function extractText(filePath, mimeType, originalName) {
+  const ext = (originalName || '').split('.').pop().toLowerCase();
+
+  // Plain text
+  if (mimeType === 'text/plain' || ext === 'txt') {
+    return fs.readFileSync(filePath, 'utf8');
+  }
+
+  // HTML — strip tags
+  if (mimeType === 'text/html' || ext === 'html' || ext === 'htm') {
+    const html = fs.readFileSync(filePath, 'utf8');
+    return html
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, ' ')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, ' ')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/[ \t]{2,}/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
+
+  // PDF
+  if (mimeType === 'application/pdf' || ext === 'pdf') {
     // Use lib/pdf-parse.js directly to bypass the buggy index.js
     // that tries to read a test file from disk on serverless cold starts
     const pdfParse = (await import('pdf-parse/lib/pdf-parse.js')).default;
@@ -58,22 +141,37 @@ export default async function handler(req, res) {
     const file = Array.isArray(files.file) ? files.file[0] : files.file;
     if (!file) return res.status(400).json({ error: 'No file uploaded' });
 
+    const ext = (file.originalFilename || '').split('.').pop().toLowerCase();
+    const isJSON = file.mimetype === 'application/json' || ext === 'json';
+
+    let parsed;
     let rawText = '';
-    try {
-      rawText = await extractText(file.filepath, file.mimetype);
-    } catch (e) {
-      fs.unlinkSync(file.filepath);
-      return res.status(422).json({ error: `Text extraction failed: ${e.message}` });
-    }
 
-    const parsed = parseInvoiceText(rawText);
+    if (isJSON) {
+      const raw = fs.readFileSync(file.filepath, 'utf8');
+      parsed = parseEInvoiceJSON(raw);
+      if (!parsed) {
+        fs.unlinkSync(file.filepath);
+        return res.status(422).json({ error: 'Could not parse e-invoice JSON — expected NIC/IRP format' });
+      }
+      rawText = raw;
+    } else {
+      try {
+        rawText = await extractText(file.filepath, file.mimetype, file.originalFilename);
+      } catch (e) {
+        fs.unlinkSync(file.filepath);
+        return res.status(422).json({ error: `Text extraction failed: ${e.message}` });
+      }
 
-    if (!parsed.invoiceNo && !parsed.irn && !parsed.totalAmount) {
-      fs.unlinkSync(file.filepath);
-      return res.status(422).json({
-        error: 'Could not extract invoice data — try a cleaner scan or enter manually',
-        raw: rawText.slice(0, 500),
-      });
+      parsed = parseInvoiceText(rawText);
+
+      if (!parsed.invoiceNo && !parsed.irn && !parsed.totalAmount) {
+        fs.unlinkSync(file.filepath);
+        return res.status(422).json({
+          error: 'Could not extract invoice data — try a cleaner scan or enter manually',
+          raw: rawText.slice(0, 500),
+        });
+      }
     }
 
     const vendor = await findOrCreateVendor(parsed);
@@ -95,7 +193,7 @@ export default async function handler(req, res) {
       tds: parsed.tds,
       totalAmount: parsed.totalAmount,
       netPayable: parsed.netPayable,
-      source: 'ocr',
+      source: parsed._source === 'json' ? 'json' : 'ocr',
       ocrRaw: rawText,
       ocrConfidence: parsed.confidence,
       fileName: file.originalFilename,
