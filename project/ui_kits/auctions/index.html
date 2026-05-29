@@ -1,0 +1,706 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya — Reverse Auctions UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<template id="__bundler_thumbnail">
+  <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+    <rect width="400" height="400" fill="#FAF7F2"/>
+    <g transform="translate(120,120)">
+      <circle cx="80" cy="80" r="80" fill="#FBE9E7"/>
+      <text x="80" y="98" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="700" font-size="56" fill="#D8261C" letter-spacing="-1">k</text>
+    </g>
+    <text x="200" y="320" text-anchor="middle" font-family="DM Sans, sans-serif" font-weight="600" font-size="22" fill="#1A1614">Auctions</text>
+  </svg>
+</template>
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<link rel="stylesheet" href="../../auction.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-sans); background: var(--kraya-paper); color: var(--fg-1); font-size: 14px;}
+
+  /* ─── App shell ─── */
+  .app { display: grid; grid-template-rows: 56px 1fr; min-height: 100vh;}
+  .topbar { display: flex; align-items: center; padding: 0 22px; gap: 18px;
+            background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);}
+  .topbar img { height: 22px;}
+  .topbar .tag {
+    background: var(--kraya-red-soft); color: var(--kraya-red); padding: 4px 10px; border-radius: 999px;
+    font: 600 11px/1 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .role-toggle { margin-left: auto; display: flex; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 8px; padding: 3px;}
+  .role-toggle button { background: transparent; border: none; padding: 6px 12px; border-radius: 6px; font: 500 12px/1 var(--font-sans); cursor: pointer; color: var(--fg-2);}
+  .role-toggle button.active { background: var(--kraya-ink); color: white;}
+  .avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--neutral-200); color: var(--fg-2); display: grid; place-items: center; font: 600 12px/1 var(--font-sans);}
+  .breadcrumb { font: 500 12px/1 var(--font-sans); color: var(--fg-3);}
+  .breadcrumb strong { color: var(--fg-1); font-weight: 600;}
+
+  /* ─── Screens ─── */
+  .screen { display: none; padding: 28px 36px 64px;}
+  .screen.active { display: block;}
+
+  /* Auction hero — shared between buyer + vendor */
+  .auction-hero { display: grid; grid-template-columns: 1fr auto; gap: 32px; padding: 24px 28px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 14px; box-shadow: var(--shadow-1); margin-bottom: 20px; align-items: center;}
+  .auction-hero .id { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 6px;}
+  .auction-hero h1 { font: 700 30px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 6px;}
+  .auction-hero .sub { font: 400 13px/1.4 var(--font-sans); color: var(--fg-2);}
+  .auction-hero .badges { display: flex; gap: 8px; margin-top: 14px;}
+  .auction-hero .badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px; font: 600 11px/1.2 var(--font-sans);}
+  .b-live { background: var(--auction-live-soft); color: var(--auction-live);}
+  .b-info { background: var(--info-soft); color: var(--info);}
+  .b-warning { background: var(--warning-soft); color: var(--warning);}
+
+  /* Timer block at the right of hero */
+  .timer-block { text-align: center; padding-left: 32px; border-left: 1px solid var(--border-subtle);}
+  .timer-block .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 8px;}
+  .timer-block .kx-timer { font-size: 48px;}
+  .timer-block .units { display: flex; justify-content: center; gap: 22px; margin-top: 6px; font: 500 10px/1 var(--font-mono); color: var(--fg-3); letter-spacing: 0.2em;}
+
+  /* Stats row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;}
+  .stat { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px 18px;}
+  .stat .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 10px;}
+  .stat .v { font: 700 22px/1 var(--font-sans); color: var(--fg-1); letter-spacing: -0.01em; display: flex; align-items: baseline; gap: 6px;}
+  .stat .v .u { font: 500 13px/1 var(--font-sans); color: var(--fg-2);}
+  .stat .delta { font: 500 11px/1 var(--font-mono); color: var(--success); margin-top: 6px;}
+  .stat .delta.down { color: var(--danger);}
+  .stat.brand { background: var(--kraya-ink); border-color: var(--kraya-ink-2);}
+  .stat.brand .lbl, .stat.brand .v, .stat.brand .v .u { color: white;}
+  .stat.brand .lbl { color: rgba(255,255,255,0.6);}
+
+  /* Two-col layout */
+  .grid-2 { display: grid; grid-template-columns: 1.65fr 1fr; gap: 20px;}
+
+  /* Card primitive */
+  .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; box-shadow: var(--shadow-1); overflow: hidden;}
+  .card-h { display: flex; align-items: center; justify-content: space-between; padding: 14px 18px; border-bottom: 1px solid var(--border-subtle);}
+  .card-h h3 { font: 600 13px/1 var(--font-sans); margin: 0;}
+  .card-h .meta { font: 500 11px/1 var(--font-mono); color: var(--fg-3);}
+  .card-h .live { color: var(--auction-live); display: inline-flex; align-items: center; gap: 6px;}
+  .card-b { padding: 6px;}
+  .card-b.pad { padding: 18px;}
+
+  /* Ticker (live event feed) */
+  .tick { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 9px 14px; border-radius: 6px;}
+  .tick:hover { background: var(--bg-canvas);}
+  .tick .when { font: 500 10px/1 var(--font-mono); color: var(--fg-3); width: 38px;}
+  .tick .who { font: 500 12px/1.3 var(--font-sans); color: var(--fg-1);}
+  .tick .who .ev { color: var(--fg-2); font-weight: 400;}
+  .tick .price { font: 600 12px/1 var(--font-mono); color: var(--fg-1); font-variant-numeric: tabular-nums;}
+  .tick.bid .price { color: var(--success);}
+  .tick.ext { background: var(--warning-soft);}
+  .tick.ext .who .ev { color: var(--auction-extended);}
+
+  /* Chart wrap */
+  .chart-wrap { position: relative; height: 140px; padding: 8px;}
+  .chart-wrap svg { width: 100%; height: 100%; display: block;}
+
+  /* Buttons */
+  .btn { font: 600 13px/1 var(--font-sans); border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 6px;}
+  .btn-primary { background: var(--kraya-red); color: white; box-shadow: var(--shadow-1);}
+  .btn-primary:hover { background: var(--kraya-red-hover);}
+  .btn-outline { background: var(--bg-surface); color: var(--fg-1); border-color: var(--border-default);}
+  .btn-outline:hover { background: var(--bg-subtle);}
+  .btn-danger { background: var(--bg-surface); color: var(--danger); border-color: #F0B6B0;}
+  .btn-danger:hover { background: var(--danger-soft);}
+
+  /* ─── Vendor view: position ribbon ─── */
+  .position-card {
+    background: var(--bg-surface); border-radius: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-2);
+    padding: 24px; display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center; margin-bottom: 20px;
+    position: relative; overflow: hidden;
+  }
+  .position-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--auction-extended);}
+  .position-card.rank1::before { background: var(--success);}
+  .pos-rank { font: 700 72px/0.9 var(--font-sans); letter-spacing: -0.04em; color: var(--auction-extended);}
+  .pos-rank sup { font: 600 20px/1 var(--font-sans); vertical-align: top; margin-left: 4px;}
+  .pos-card.rank1 .pos-rank { color: var(--success);}
+  .pos-meta .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;}
+  .pos-meta h2 { font: 700 22px/1.1 var(--font-sans); margin: 0 0 6px; letter-spacing: -0.01em;}
+  .pos-meta .gap { font: 500 14px/1.4 var(--font-sans); color: var(--fg-2);}
+  .pos-meta .gap strong { color: var(--auction-extended); font-family: var(--font-mono); font-weight: 600;}
+
+  /* Bid input panel (vendor view) */
+  .bid-panel { background: var(--bg-surface); border-radius: 14px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 22px; }
+  .bid-panel h3 { font: 600 14px/1 var(--font-sans); margin: 0 0 14px;}
+  .bid-input-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 12px;}
+  .bid-currency { display: grid; place-items: center; padding: 0 14px; background: var(--bg-canvas); border: 1.5px solid var(--border-default); border-right: none; border-radius: 8px 0 0 8px; font: 600 18px/1 var(--font-sans); color: var(--fg-2);}
+  .bid-input { flex: 1; padding: 14px 16px; border: 1.5px solid var(--border-default); border-left: none; border-radius: 0 8px 8px 0;
+    font: 600 22px/1 var(--font-mono); color: var(--fg-1); background: var(--bg-surface); outline: none; font-variant-numeric: tabular-nums; min-width: 0;}
+  .bid-input:focus { border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft);}
+  .quick { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 14px;}
+  .qb { padding: 8px 6px; border-radius: 6px; background: var(--bg-canvas); border: 1px solid var(--border-default); cursor: pointer; font: 500 12px/1.4 var(--font-sans); color: var(--fg-1);}
+  .qb:hover { background: var(--bg-subtle);}
+  .qb .qb-lbl { font-size: 10px; color: var(--fg-3); display: block; margin-bottom: 3px;}
+  .submit-row { display: flex; gap: 8px;}
+  .submit-row .btn-primary { flex: 1; justify-content: center; padding: 13px 18px; font-size: 14px;}
+  .meta-foot { display: flex; justify-content: space-between; margin-top: 14px; font: 400 11px/1.4 var(--font-sans); color: var(--fg-3);}
+  .meta-foot strong { color: var(--fg-1);}
+
+  /* Banner (extension etc) */
+  .banner { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; font: 500 13px/1.3 var(--font-sans); margin-bottom: 16px;}
+  .banner.extend { background: var(--warning-soft); color: var(--warning); border: 1px solid #F3D9A5;}
+  .banner.extend .ico { width: 28px; height: 28px; border-radius: 999px; background: var(--warning); color: white; display: grid; place-items: center; flex-shrink: 0;}
+  .banner strong { font-weight: 700;}
+  .banner .right { margin-left: auto; font: 600 12px/1 var(--font-mono);}
+
+  /* Setup form */
+  .setup { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px;}
+  .setup-form { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 24px;}
+  .setup-form h3 { font: 600 14px/1 var(--font-sans); margin: 0 0 4px;}
+  .setup-form .sub { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 18px;}
+  .setup-form .grp { padding: 16px 0; border-bottom: 1px solid var(--border-subtle);}
+  .setup-form .grp:last-child { border: none;}
+  .setup-form label { display: block; font: 500 12px/1 var(--font-sans); color: var(--fg-2); margin-bottom: 6px;}
+  .setup-form input, .setup-form select, .setup-form textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border-default); border-radius: 6px;
+    font: 400 14px/1 var(--font-sans); color: var(--fg-1); background: var(--bg-surface); outline: none;
+  }
+  .setup-form input:focus { border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft);}
+  .setup-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
+  .setup-form .row.three { grid-template-columns: 1fr 1fr 1fr;}
+  .setup-form .toggle-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; cursor: pointer;}
+  .toggle { width: 36px; height: 20px; border-radius: 999px; background: var(--neutral-300); position: relative; transition: background var(--dur-fast); flex-shrink: 0;}
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 999px; background: white; transition: left var(--dur-fast); box-shadow: var(--shadow-1);}
+  .toggle.on { background: var(--kraya-red);}
+  .toggle.on::after { left: 18px;}
+  .toggle-row .lbl-block { flex: 1;}
+  .toggle-row .name { font: 500 13px/1 var(--font-sans); color: var(--fg-1);}
+  .toggle-row .desc { font: 400 12px/1.4 var(--font-sans); color: var(--fg-3); margin-top: 3px;}
+
+  /* Summary preview panel */
+  .preview-panel { position: sticky; top: 80px; background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 20px;}
+  .preview-panel h4 { font: 600 13px/1 var(--font-sans); margin: 0 0 12px;}
+  .preview-panel .item { display: flex; justify-content: space-between; padding: 8px 0; font: 400 12px/1.4 var(--font-sans); color: var(--fg-2); border-bottom: 1px dashed var(--border-subtle);}
+  .preview-panel .item:last-of-type { border: none;}
+  .preview-panel .item strong { color: var(--fg-1); font-family: var(--font-mono); font-weight: 600;}
+  .preview-panel .total { display: flex; justify-content: space-between; padding: 10px 0; margin-top: 6px; border-top: 1px solid var(--border-subtle); font: 600 13px/1 var(--font-sans);}
+
+  /* Section heading */
+  .h-sec { display: flex; align-items: baseline; justify-content: space-between; margin: 24px 0 12px;}
+  .h-sec h2 { font: 600 16px/1 var(--font-sans); margin: 0;}
+  .h-sec .meta { font: 500 12px/1 var(--font-sans); color: var(--fg-3);}
+
+  /* Award screen */
+  .award-hero { display: grid; place-items: center; padding: 64px 24px; background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 16px; text-align: center;}
+  .award-hero .check { width: 72px; height: 72px; border-radius: 999px; background: var(--success-soft); color: var(--success); display: grid; place-items: center; margin-bottom: 24px;}
+  .award-hero h1 { font: 700 32px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 8px;}
+  .award-hero .winner { font: 500 16px/1.4 var(--font-sans); color: var(--fg-2);}
+  .award-hero .price { font: 700 56px/1 var(--font-mono); color: var(--fg-1); letter-spacing: -0.02em; margin: 32px 0 8px;}
+  .award-hero .savings { font: 600 14px/1 var(--font-sans); color: var(--success);}
+</style>
+</head>
+<body class="kraya">
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <img src="../../assets/logo/kraya-logo-black.png" alt="kraya" />
+    <span class="tag">Auctions</span>
+    <span class="breadcrumb" id="crumb">Live monitoring · <strong>RFQ-2026-0418 · Steel rods 304L</strong></span>
+    <div class="role-toggle">
+      <button class="active" data-role="buyer" data-screen="buyer">Buyer · monitor</button>
+      <button data-role="vendor" data-screen="vendor">Vendor · bid floor</button>
+      <button data-role="setup" data-screen="setup">Setup</button>
+      <button data-role="awarded" data-screen="awarded">Awarded</button>
+    </div>
+    <div class="avatar" id="avatar">RS</div>
+  </header>
+
+  <main>
+
+    <!-- ════════════════ BUYER · MONITOR ════════════════ -->
+    <section class="screen active" id="screen-buyer">
+
+      <div class="banner extend">
+        <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div><strong>Auction extended by 2 minutes.</strong> Anti-sniping rule triggered — bid placed in final 60 seconds.</div>
+        <span class="right">+02:00</span>
+      </div>
+
+      <div class="auction-hero">
+        <div>
+          <div class="id">RFQ-2026-0418 · Posted by you</div>
+          <h1>Steel rods · 304L · 12,500 units</h1>
+          <div class="sub">Mumbai delivery · Q3 dispatch · GST extra · 8 vendors invited · 6 actively bidding</div>
+          <div class="badges">
+            <span class="badge b-live"><span class="kx-live-dot"></span>LIVE</span>
+            <span class="badge b-warning">Extended +2 min</span>
+          </div>
+        </div>
+        <div class="timer-block">
+          <div class="lbl">CLOSES IN</div>
+          <div class="kx-timer warn"><span class="seg">00</span><span class="sep">:</span><span class="seg">02</span><span class="sep">:</span><span class="seg">48</span></div>
+          <div class="units"><span>HRS</span><span>MIN</span><span>SEC</span></div>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat brand"><div class="lbl">LEAD BID</div><div class="v">₹ 14.68<span class="u">L</span></div><div class="delta" style="color:#6FD1A4">−7.1% vs start</div></div>
+        <div class="stat"><div class="lbl">STARTING PRICE</div><div class="v">₹ 15.80<span class="u">L</span></div></div>
+        <div class="stat"><div class="lbl">SAVINGS</div><div class="v" style="color: var(--success)">₹ 1.12<span class="u">L</span></div><div class="delta">vs starting price</div></div>
+        <div class="stat"><div class="lbl">BIDS PLACED</div><div class="v">23</div><div class="delta">across 6 vendors</div></div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Leaderboard -->
+        <div>
+          <div class="card">
+            <div class="card-h">
+              <h3>Live leaderboard</h3>
+              <span class="meta live"><span class="kx-live-dot"></span>updating</span>
+            </div>
+            <div class="card-b">
+              <div class="kx-bid-row">
+                <span class="kx-rank r1">1</span>
+                <div><div class="vendor">Bharat Steel Co.</div><div class="meta">BS · Mumbai · A+ score · 14s ago</div></div>
+                <span class="bid">₹ 14,68,500</span>
+                <span class="delta">−7.1%</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank r2">2</span>
+                <div><div class="vendor">Reliance Engg.</div><div class="meta">RE · Hazira · A · 36s ago</div></div>
+                <span class="bid">₹ 14,74,200</span>
+                <span class="delta">−6.7%</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank r3">3</span>
+                <div><div class="vendor">Tata Components</div><div class="meta">TC · Jamshedpur · A+ · 1m 12s ago</div></div>
+                <span class="bid">₹ 14,82,500</span>
+                <span class="delta">−6.2%</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank">4</span>
+                <div><div class="vendor">Mahindra Logistics</div><div class="meta">ML · Pune · A · 4m 02s ago</div></div>
+                <span class="bid">₹ 14,98,100</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank">5</span>
+                <div><div class="vendor">Larsen Industrial</div><div class="meta">LI · Mumbai · B+ · 8m ago</div></div>
+                <span class="bid">₹ 15,28,400</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank" style="opacity: 0.5">—</span>
+                <div><div class="vendor" style="color: var(--fg-3);">Godrej Industries</div><div class="meta">GI · Mumbai · A · invited, no bid yet</div></div>
+                <span class="bid" style="color: var(--fg-3);">—</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank" style="opacity: 0.5">—</span>
+                <div><div class="vendor" style="color: var(--fg-3);">Hindalco Extrusions</div><div class="meta">HE · Renukoot · B+ · invited, no bid yet</div></div>
+                <span class="bid" style="color: var(--fg-3);">—</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Chart -->
+          <div class="card" style="margin-top: 16px;">
+            <div class="card-h">
+              <h3>Price trajectory</h3>
+              <span class="meta">−7.1% in 06:12</span>
+            </div>
+            <div class="card-b pad">
+              <div class="chart-wrap">
+                <svg viewBox="0 0 500 130" preserveAspectRatio="none">
+                  <!-- gridlines -->
+                  <line x1="0" y1="30" x2="500" y2="30" stroke="#E5DED4" stroke-dasharray="3 3"/>
+                  <line x1="0" y1="65" x2="500" y2="65" stroke="#E5DED4" stroke-dasharray="3 3"/>
+                  <line x1="0" y1="100" x2="500" y2="100" stroke="#E5DED4" stroke-dasharray="3 3"/>
+                  <!-- area under leader line -->
+                  <path d="M 0,10 L 60,10 L 60,28 L 130,28 L 130,52 L 220,52 L 220,72 L 320,72 L 320,98 L 500,98 L 500,130 L 0,130 Z"
+                        fill="#FBE9E7" opacity="0.5"/>
+                  <!-- leader line -->
+                  <path d="M 0,10 L 60,10 L 60,28 L 130,28 L 130,52 L 220,52 L 220,72 L 320,72 L 320,98 L 500,98"
+                        fill="none" stroke="#D8261C" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- second place ghost -->
+                  <path d="M 0,10 L 80,10 L 80,40 L 180,40 L 180,68 L 280,68 L 280,86 L 380,86 L 500,104"
+                        fill="none" stroke="#5F544D" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.6"/>
+                  <circle cx="500" cy="98" r="4" fill="#D8261C"/>
+                  <text x="498" y="92" text-anchor="end" font-size="10" font-family="IBM Plex Mono" fill="#D8261C" font-weight="600">₹14.68L</text>
+                </svg>
+              </div>
+              <div style="display: flex; gap: 18px; padding: 0 8px; font: 500 11px/1 var(--font-sans); color: var(--fg-2); margin-top: 4px;">
+                <span style="display:inline-flex; align-items:center; gap:6px;"><i style="display:inline-block; width:14px; height:2px; background: var(--kraya-red);"></i>Lead bid</span>
+                <span style="display:inline-flex; align-items:center; gap:6px;"><i style="display:inline-block; width:14px; height:2px; background-image: repeating-linear-gradient(90deg, #5F544D 0 3px, transparent 3px 6px);"></i>2nd place</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right column -->
+        <div>
+          <!-- Activity ticker -->
+          <div class="card">
+            <div class="card-h">
+              <h3>Live ticker</h3>
+              <span class="meta live"><span class="kx-live-dot"></span>LIVE</span>
+            </div>
+            <div class="card-b">
+              <div class="tick bid">
+                <span class="when">14s</span>
+                <span class="who"><strong>Bharat Steel</strong> <span class="ev">improved bid</span></span>
+                <span class="price">₹ 14,68,500 ↓</span>
+              </div>
+              <div class="tick bid">
+                <span class="when">36s</span>
+                <span class="who"><strong>Reliance Engg.</strong> <span class="ev">placed bid</span></span>
+                <span class="price">₹ 14,74,200 ↓</span>
+              </div>
+              <div class="tick ext">
+                <span class="when">38s</span>
+                <span class="who"><span class="ev">Auction extended +2 min</span></span>
+                <span class="price" style="color: var(--auction-extended);">+02:00</span>
+              </div>
+              <div class="tick bid">
+                <span class="when">1m 12s</span>
+                <span class="who"><strong>Tata Components</strong> <span class="ev">placed bid</span></span>
+                <span class="price">₹ 14,82,500 ↓</span>
+              </div>
+              <div class="tick bid">
+                <span class="when">4m 02s</span>
+                <span class="who"><strong>Mahindra Log.</strong> <span class="ev">placed bid</span></span>
+                <span class="price">₹ 14,98,100 ↓</span>
+              </div>
+              <div class="tick bid">
+                <span class="when">8m</span>
+                <span class="who"><strong>Larsen Ind.</strong> <span class="ev">placed bid</span></span>
+                <span class="price">₹ 15,28,400 ↓</span>
+              </div>
+              <div class="tick">
+                <span class="when">12m</span>
+                <span class="who"><span class="ev">Auction opened · starting price</span></span>
+                <span class="price" style="color: var(--fg-3);">₹ 15,80,000</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Buyer controls -->
+          <div class="card" style="margin-top: 16px;">
+            <div class="card-h"><h3>Buyer controls</h3></div>
+            <div class="card-b pad">
+              <div style="display: flex; flex-direction: column; gap: 8px;">
+                <button class="btn btn-outline" style="justify-content: flex-start;">⏸ Pause auction</button>
+                <button class="btn btn-outline" style="justify-content: flex-start;">⏱ Extend by 5 min manually</button>
+                <button class="btn btn-outline" style="justify-content: flex-start;">📣 Message all vendors</button>
+                <button class="btn btn-danger" style="justify-content: flex-start; margin-top: 4px;">⏹ Cancel auction</button>
+              </div>
+              <div style="margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--border-subtle); font: 400 12px/1.5 var(--font-sans); color: var(--fg-3);">
+                Auction will <strong style="color: var(--fg-1);">auto-award to lead bidder</strong> when timer closes, unless you choose to review manually.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ VENDOR · BID FLOOR ════════════════ -->
+    <section class="screen" id="screen-vendor">
+
+      <div class="banner extend">
+        <span class="ico"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+        <div><strong>Auction extended by 2 minutes.</strong> A competing vendor placed a bid in the final 60 seconds. You still have time to improve your offer.</div>
+        <span class="right">+02:00</span>
+      </div>
+
+      <div class="auction-hero">
+        <div>
+          <div class="id">RFQ-2026-0418 · From Acme Manufacturing</div>
+          <h1>Steel rods · 304L · 12,500 units</h1>
+          <div class="sub">Mumbai delivery · Q3 dispatch · GST extra · Sealed competitor identities</div>
+          <div class="badges">
+            <span class="badge b-live"><span class="kx-live-dot"></span>LIVE</span>
+            <span class="badge b-warning">Extended +2 min</span>
+          </div>
+        </div>
+        <div class="timer-block">
+          <div class="lbl">CLOSES IN</div>
+          <div class="kx-timer warn"><span class="seg">00</span><span class="sep">:</span><span class="seg">02</span><span class="sep">:</span><span class="seg">48</span></div>
+          <div class="units"><span>HRS</span><span>MIN</span><span>SEC</span></div>
+        </div>
+      </div>
+
+      <!-- Position ribbon — the showstopper -->
+      <div class="position-card">
+        <div class="pos-rank">2<sup>nd</sup></div>
+        <div class="pos-meta">
+          <div class="lbl">YOUR POSITION</div>
+          <h2>One step from the lead.</h2>
+          <div class="gap">You're <strong>₹5,700</strong> (0.4%) behind the lead bid. Improve your offer to take 1st.</div>
+        </div>
+        <div style="text-align: right;">
+          <div style="font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">YOUR LAST BID</div>
+          <div style="font: 700 28px/1 var(--font-mono); color: var(--fg-1);">₹ 14,74,200</div>
+          <div style="font: 500 12px/1 var(--font-mono); color: var(--success); margin-top: 6px;">−6.7% from start</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <!-- Left col — bid input -->
+        <div>
+          <div class="bid-panel">
+            <h3>Place your next bid</h3>
+
+            <div style="display: flex; justify-content: space-between; padding: 12px 14px; background: var(--bg-canvas); border-radius: 8px; margin-bottom: 14px; font: 500 12px/1 var(--font-sans);">
+              <span style="color: var(--fg-2)">Current lead bid</span>
+              <span style="font-family: var(--font-mono); font-weight: 700; color: var(--success);">₹ 14,68,500</span>
+            </div>
+
+            <div class="bid-input-row">
+              <div class="bid-currency">₹</div>
+              <input class="bid-input" value="14,65,000" />
+            </div>
+
+            <div class="quick">
+              <button class="qb"><span class="qb-lbl">−1%</span>₹14.59L</button>
+              <button class="qb"><span class="qb-lbl">−2%</span>₹14.45L</button>
+              <button class="qb"><span class="qb-lbl">Match lead</span>₹14.68L</button>
+              <button class="qb"><span class="qb-lbl">Beat lead</span>₹14.65L</button>
+            </div>
+
+            <div class="submit-row">
+              <button class="btn btn-outline">Save draft</button>
+              <button class="btn btn-primary">Place bid →</button>
+            </div>
+
+            <div class="meta-foot">
+              <span>Min decrement <strong>₹500</strong> · GST excluded</span>
+              <span>Revisable until <strong>close</strong></span>
+            </div>
+          </div>
+
+          <!-- Rules card -->
+          <div class="card" style="margin-top: 16px;">
+            <div class="card-h"><h3>Auction rules</h3><span class="meta">at a glance</span></div>
+            <div class="card-b pad">
+              <div style="display: grid; grid-template-columns: auto 1fr; gap: 10px 16px; font: 500 12px/1.4 var(--font-sans); color: var(--fg-1);">
+                <span style="color: var(--fg-3); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.02em;">START</span><span>₹ 15,80,000 (excl. GST)</span>
+                <span style="color: var(--fg-3); font-family: var(--font-mono); font-size: 11px;">DECREMENT</span><span>Minimum ₹500 per bid</span>
+                <span style="color: var(--fg-3); font-family: var(--font-mono); font-size: 11px;">DURATION</span><span>45 min total · extends +2 min if bid in last 60s</span>
+                <span style="color: var(--fg-3); font-family: var(--font-mono); font-size: 11px;">VISIBILITY</span><span>Rank + lead bid · competitor names hidden</span>
+                <span style="color: var(--fg-3); font-family: var(--font-mono); font-size: 11px;">AWARD</span><span>Auto-awarded to lowest bid at close</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right col — competitor view (sealed) + activity -->
+        <div>
+          <div class="card">
+            <div class="card-h">
+              <h3>Competition (anonymized)</h3>
+              <span class="meta">6 of 8 active</span>
+            </div>
+            <div class="card-b">
+              <div class="kx-bid-row">
+                <span class="kx-rank r1">1</span>
+                <div><div class="vendor" style="color: var(--fg-2);">Bidder A</div><div class="meta">leading · 14s ago</div></div>
+                <span class="bid">₹ 14,68,500</span>
+              </div>
+              <div class="kx-bid-row you">
+                <span class="kx-rank you">2</span>
+                <div><div class="vendor">You</div><div class="meta">your last bid · 36s ago</div></div>
+                <span class="bid">₹ 14,74,200</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank r3">3</span>
+                <div><div class="vendor" style="color: var(--fg-2);">Bidder C</div><div class="meta">1m 12s ago</div></div>
+                <span class="bid">₹ 14,82,500</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank">4</span>
+                <div><div class="vendor" style="color: var(--fg-2);">Bidder D</div><div class="meta">4m 02s ago</div></div>
+                <span class="bid">₹ 14,98,100</span>
+              </div>
+              <div class="kx-bid-row">
+                <span class="kx-rank">5</span>
+                <div><div class="vendor" style="color: var(--fg-2);">Bidder E</div><div class="meta">8m ago</div></div>
+                <span class="bid">₹ 15,28,400</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px;">
+            <div class="card-h"><h3>Recent activity</h3><span class="meta live"><span class="kx-live-dot"></span>LIVE</span></div>
+            <div class="card-b">
+              <div class="tick bid"><span class="when">14s</span><span class="who"><strong>Bidder A</strong> <span class="ev">took the lead</span></span><span class="price">₹ 14,68,500</span></div>
+              <div class="tick bid"><span class="when">36s</span><span class="who"><strong>You</strong> <span class="ev">placed bid</span></span><span class="price">₹ 14,74,200</span></div>
+              <div class="tick ext"><span class="when">38s</span><span class="who"><span class="ev">Auction extended +2 min</span></span><span class="price" style="color: var(--auction-extended);">+02:00</span></div>
+              <div class="tick bid"><span class="when">1m</span><span class="who"><strong>Bidder C</strong> <span class="ev">placed bid</span></span><span class="price">₹ 14,82,500</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ SETUP ════════════════ -->
+    <section class="screen" id="screen-setup">
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
+        <div>
+          <div style="font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 6px;">NEW AUCTION · DRAFT</div>
+          <h1 style="font: 700 26px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 4px;">Create reverse auction</h1>
+          <p style="font: 400 13px/1.4 var(--font-sans); color: var(--fg-2); margin: 0;">Vendors bid downward from your starting price. Configure rules and rank visibility before publishing.</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline">Save draft</button>
+          <button class="btn btn-primary">Publish to vendors →</button>
+        </div>
+      </div>
+
+      <div class="setup">
+        <div class="setup-form">
+
+          <div class="grp">
+            <h3>Item details</h3>
+            <div class="sub">What are vendors bidding on?</div>
+            <label>Auction title</label>
+            <input value="Steel rods · 304L · 12,500 units" />
+            <div style="height: 14px"></div>
+            <div class="row">
+              <div><label>Category</label><select><option>Metals · Steel · Rods</option></select></div>
+              <div><label>Delivery location</label><input value="Mumbai, Andheri East" /></div>
+            </div>
+            <div style="height: 12px"></div>
+            <label>Specifications</label>
+            <textarea rows="3">Stainless steel 304L · 16mm dia · 6m length · mill test cert required · ISI marked</textarea>
+          </div>
+
+          <div class="grp">
+            <h3>Pricing</h3>
+            <div class="sub">Set the starting price and minimum bid decrement.</div>
+            <div class="row three">
+              <div><label>Starting price (₹)</label><input value="15,80,000" /></div>
+              <div><label>Min decrement (₹)</label><input value="500" /></div>
+              <div><label>Reserve price (₹)</label><input value="14,50,000" /></div>
+            </div>
+            <div style="font: 400 11px/1.4 var(--font-sans); color: var(--fg-3); margin-top: 8px;">Reserve price is the maximum you'll accept. Vendors don't see it.</div>
+          </div>
+
+          <div class="grp">
+            <h3>Timing</h3>
+            <div class="sub">When does the auction open and how long does it run?</div>
+            <div class="row">
+              <div><label>Auction opens</label><input value="28 May 2026 · 14:00 IST" /></div>
+              <div><label>Duration</label><select><option>45 minutes</option><option>30 minutes</option><option>1 hour</option><option>2 hours</option></select></div>
+            </div>
+          </div>
+
+          <div class="grp">
+            <h3>Rules</h3>
+            <div class="sub">How the auction behaves during the live floor.</div>
+
+            <div class="toggle-row">
+              <div class="toggle on"></div>
+              <div class="lbl-block"><div class="name">Anti-sniping protection</div><div class="desc">Auction extends +2 min if a bid lands in the final 60 seconds. Repeats until a quiet 60s window.</div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle on"></div>
+              <div class="lbl-block"><div class="name">Anonymized vendor identities</div><div class="desc">Vendors see "Bidder A / Bidder B" instead of competitor names.</div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle"></div>
+              <div class="lbl-block"><div class="name">Auto-award to lowest bid</div><div class="desc">When timer closes, award is issued immediately. If off, you review and pick.</div></div>
+            </div>
+            <div class="toggle-row">
+              <div class="toggle on"></div>
+              <div class="lbl-block"><div class="name">Compliance pre-check</div><div class="desc">Only vendors with verified GSTIN and active compliance status can bid.</div></div>
+            </div>
+          </div>
+
+          <div class="grp">
+            <h3>Vendors</h3>
+            <div class="sub">Invite 6+ vendors for healthy competition.</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Bharat Steel Co. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Reliance Engg. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Tata Components <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Mahindra Log. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Larsen Ind. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Godrej Ind. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <span style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--bg-canvas); border: 1px solid var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans);">Hindalco Extr. <span style="color: var(--fg-3); cursor: pointer;">×</span></span>
+              <button style="padding: 6px 12px; background: var(--bg-surface); border: 1px dashed var(--border-default); border-radius: 999px; font: 500 12px/1 var(--font-sans); color: var(--fg-2); cursor: pointer;">+ Invite vendor</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="preview-panel">
+            <h4>Preview — what vendors will see</h4>
+
+            <div class="item"><span>Title</span><strong style="font-family: var(--font-sans); text-align: right; max-width: 60%;">Steel rods 304L</strong></div>
+            <div class="item"><span>Starting price</span><strong>₹ 15,80,000</strong></div>
+            <div class="item"><span>Min decrement</span><strong>₹ 500</strong></div>
+            <div class="item"><span>Duration</span><strong>45 min</strong></div>
+            <div class="item"><span>Anti-sniping</span><strong style="font-family: var(--font-sans); color: var(--success);">On · +2 min</strong></div>
+            <div class="item"><span>Vendor names</span><strong style="font-family: var(--font-sans); color: var(--success);">Hidden</strong></div>
+            <div class="item"><span>Award</span><strong style="font-family: var(--font-sans); color: var(--warning);">Manual review</strong></div>
+            <div class="item"><span>Invited vendors</span><strong>7</strong></div>
+            <div class="total"><span>Reserve target</span><span style="font-family: var(--font-mono); color: var(--success);">≤ ₹14,50,000</span></div>
+
+            <button class="btn btn-outline" style="width: 100%; margin-top: 14px; justify-content: center;">Preview vendor view</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════ AWARDED ════════════════ -->
+    <section class="screen" id="screen-awarded">
+      <div class="award-hero">
+        <div class="check"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></div>
+        <h1>Auction awarded</h1>
+        <p class="winner">Winner: <strong style="color: var(--fg-1)">Bharat Steel Co.</strong> · RFQ-2026-0418 · Steel rods 304L · 12,500 units</p>
+        <div class="price">₹ 14,68,500</div>
+        <div class="savings">↓ 7.1% below starting price · ₹1,11,500 saved</div>
+
+        <div style="display: flex; gap: 32px; margin-top: 40px; padding-top: 32px; border-top: 1px solid var(--border-subtle); width: 100%; max-width: 640px; justify-content: center;">
+          <div style="text-align: center;">
+            <div style="font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">DURATION</div>
+            <div style="font: 600 16px/1 var(--font-mono);">47 min</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">BIDS</div>
+            <div style="font: 600 16px/1 var(--font-mono);">23</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">ACTIVE VENDORS</div>
+            <div style="font: 600 16px/1 var(--font-mono);">6 / 8</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">EXTENSIONS</div>
+            <div style="font: 600 16px/1 var(--font-mono);">1 · +2 min</div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 36px;">
+          <button class="btn btn-outline">Download audit trail</button>
+          <button class="btn btn-primary">Issue PO →</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  const buttons = document.querySelectorAll(".role-toggle button");
+  const screens = document.querySelectorAll(".screen");
+  const crumb = document.getElementById("crumb");
+  const avatar = document.getElementById("avatar");
+  const labels = {
+    buyer:  { c: 'Live monitoring · <strong>RFQ-2026-0418 · Steel rods 304L</strong>', av: 'RS' },
+    vendor: { c: 'Vendor bid floor · <strong>RFQ-2026-0418 · Steel rods 304L</strong>', av: 'TC' },
+    setup:  { c: 'Setup · <strong>New reverse auction</strong>', av: 'RS' },
+    awarded:{ c: 'Auction outcome · <strong>RFQ-2026-0418 · Awarded</strong>', av: 'RS' },
+  };
+  function show(name) {
+    screens.forEach(s => s.classList.toggle("active", s.id === "screen-" + name));
+    buttons.forEach(b => b.classList.toggle("active", b.dataset.screen === name));
+    crumb.innerHTML = labels[name].c;
+    avatar.textContent = labels[name].av;
+    window.scrollTo(0, 0);
+  }
+  buttons.forEach(b => b.addEventListener("click", () => show(b.dataset.screen)));
+</script>
+
+</body>
+</html>

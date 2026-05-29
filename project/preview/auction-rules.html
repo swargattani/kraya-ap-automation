@@ -1,0 +1,39 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .panel { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-1);}
+  h4 { font: 600 14px/1 var(--font-sans); margin: 0 0 16px;}
+  .rules { display: grid; grid-template-columns: auto 1fr; gap: 14px 18px; align-items: center;}
+  .key { font: 600 11px/1.3 var(--font-mono); color: var(--fg-3); letter-spacing: 0.02em;}
+  .val { font: 500 13px/1.4 var(--font-sans); color: var(--fg-1);}
+  .val .num { font-family: var(--font-mono); font-weight: 600;}
+  .val .note { font: 400 11px/1.3 var(--font-sans); color: var(--fg-3); display: block; margin-top: 2px;}
+</style>
+</head><body>
+  <div class="panel">
+    <h4>Auction rules — what vendors will see</h4>
+    <div class="rules">
+      <span class="key">START PRICE</span>
+      <span class="val"><span class="num">₹ 15,80,000</span> <span class="note">Excluding GST. Vendors bid downward from this price.</span></span>
+
+      <span class="key">MIN DECREMENT</span>
+      <span class="val"><span class="num">₹ 500</span> <span class="note">Each bid must improve on the lead by at least this amount.</span></span>
+
+      <span class="key">DURATION</span>
+      <span class="val"><span class="num">45 min</span> <span class="note">Auction window from open to close.</span></span>
+
+      <span class="key">ANTI-SNIPING</span>
+      <span class="val">Extends <span class="num">+2 min</span> if a bid lands in final <span class="num">60s</span> <span class="note">Repeats until 60s pass with no new bid.</span></span>
+
+      <span class="key">VISIBILITY</span>
+      <span class="val">Rank + lead bid · Vendor identities <strong>anonymized</strong> <span class="note">Vendors see "Bidder #3" not their competitors' names.</span></span>
+
+      <span class="key">REVISIONS</span>
+      <span class="val">Unlimited until close <span class="note">No cap on improvement bids.</span></span>
+    </div>
+  </div>
+</body></html>

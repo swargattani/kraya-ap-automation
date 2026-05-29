@@ -1,0 +1,50 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;}
+
+  .pos { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle);
+         box-shadow: var(--shadow-1); padding: 18px; text-align: left;
+         display: flex; flex-direction: column; gap: 6px; position: relative; overflow: hidden;}
+  .pos .bar { position: absolute; top: 0; left: 0; right: 0; height: 4px;}
+  .pos.win .bar    { background: var(--success);}
+  .pos.close .bar  { background: var(--auction-extended);}
+  .pos.behind .bar { background: var(--neutral-400);}
+  .pos .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3);}
+  .pos .rank { font: 700 48px/1 var(--font-sans); letter-spacing: -0.04em; }
+  .pos.win .rank { color: var(--success);}
+  .pos.close .rank { color: var(--auction-extended);}
+  .pos.behind .rank { color: var(--neutral-500);}
+  .pos .rank sup { font: 600 18px/1 var(--font-sans); vertical-align: super; margin-left: 2px;}
+  .pos .desc { font: 500 13px/1.4 var(--font-sans); color: var(--fg-2);}
+  .pos .gap { font: 500 12px/1 var(--font-mono); color: var(--fg-3);}
+</style>
+</head><body>
+  <div class="row">
+    <div class="pos win">
+      <div class="bar"></div>
+      <span class="lbl">YOUR POSITION</span>
+      <div class="rank">1<sup>st</sup></div>
+      <div class="desc">You hold the lead bid.</div>
+      <div class="gap">Lead by ₹5,700 (0.4%)</div>
+    </div>
+    <div class="pos close">
+      <div class="bar"></div>
+      <span class="lbl">YOUR POSITION</span>
+      <div class="rank">2<sup>nd</sup></div>
+      <div class="desc">One step from the lead.</div>
+      <div class="gap">₹5,700 behind leader</div>
+    </div>
+    <div class="pos behind">
+      <div class="bar"></div>
+      <span class="lbl">YOUR POSITION</span>
+      <div class="rank">5<sup>th</sup></div>
+      <div class="desc">Improve your bid to compete.</div>
+      <div class="gap">₹38,200 behind leader</div>
+    </div>
+  </div>
+</body></html>

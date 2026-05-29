@@ -1,0 +1,31 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--kraya-paper); }
+  .grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 8px; }
+  .sw { aspect-ratio: 1/1.1; border-radius: 8px; padding: 8px;
+        display: flex; flex-direction: column; justify-content: space-between;
+        border: 1px solid var(--border-subtle); }
+  .sw .n { font: 600 11px/1 var(--font-sans); }
+  .sw .h { font: 500 10px/1 var(--font-mono); opacity: 0.85; }
+  .dark .n, .dark .h { color: #fff; }
+  .light .n, .light .h { color: var(--fg-1); }
+  .row { margin-top: 14px; font: 500 12px/1 var(--font-sans); color: var(--fg-2); letter-spacing: 0.04em; text-transform: uppercase;}
+</style>
+</head><body>
+  <div class="grid">
+    <div class="sw dark" style="background: var(--neutral-900)"><div class="n">900</div><div class="h">1A1614</div></div>
+    <div class="sw dark" style="background: var(--neutral-800)"><div class="n">800</div><div class="h">2B2522</div></div>
+    <div class="sw dark" style="background: var(--neutral-700)"><div class="n">700</div><div class="h">443B36</div></div>
+    <div class="sw dark" style="background: var(--neutral-600)"><div class="n">600</div><div class="h">5F544D</div></div>
+    <div class="sw dark" style="background: var(--neutral-500)"><div class="n">500</div><div class="h">847870</div></div>
+    <div class="sw light" style="background: var(--neutral-400)"><div class="n">400</div><div class="h">ADA399</div></div>
+    <div class="sw light" style="background: var(--neutral-300)"><div class="n">300</div><div class="h">D0C8BE</div></div>
+    <div class="sw light" style="background: var(--neutral-200)"><div class="n">200</div><div class="h">E5DED4</div></div>
+    <div class="sw light" style="background: var(--neutral-100)"><div class="n">100</div><div class="h">F0EAE0</div></div>
+    <div class="sw light" style="background: var(--neutral-50); border-color: var(--neutral-200)"><div class="n">50</div><div class="h">FAF7F2</div></div>
+  </div>
+  <div class="row">warm-leaning, paper-toned · ink → cream</div>
+</body></html>

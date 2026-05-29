@@ -1,0 +1,28 @@
+<!-- @dsCard group="Type" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 24px 32px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .grid { display: grid; grid-template-columns: 130px 1fr; gap: 16px; align-items: baseline; }
+  .meta { font: 500 11px/1.4 var(--font-mono); color: var(--fg-3); padding: 8px 0; }
+  .spec { font-family: var(--font-mono); font-variant-numeric: tabular-nums; padding: 8px 0; border-bottom: 1px dashed var(--border-subtle); }
+  .grid > div:last-of-type { border: none; }
+  .stack { display: flex; align-items: baseline; gap: 18px;}
+  .stack span { color: var(--fg-3); font: 500 11px/1.4 var(--font-mono); }
+</style>
+</head><body>
+  <div class="grid">
+    <div class="meta">PO Number</div><div class="spec" style="font-weight: 600; color: var(--fg-1);">PO-2026-04711</div>
+    <div class="meta">SKU / Code</div><div class="spec" style="color: var(--fg-1);">KRY-STEEL-018-A · LOT 2849</div>
+    <div class="meta">Currency</div>
+    <div class="spec">
+      <div class="stack">
+        <span style="color: var(--fg-1); font-weight: 600; font-size: 18px;">₹ 14,82,500.00</span>
+        <span>INR</span>
+      </div>
+    </div>
+    <div class="meta">Quantity</div><div class="spec" style="color: var(--fg-1);">12,500 <span style="color: var(--fg-3)">units</span></div>
+    <div class="meta">Date</div><div class="spec" style="color: var(--fg-1);">2026-05-27 · 14:32 IST</div>
+  </div>
+</body></html>

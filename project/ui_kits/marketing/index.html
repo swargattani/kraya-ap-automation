@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya — Marketing UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  /* ── Black & white theme overrides ────────────────────────────── */
+  :root {
+    --bw-bg:        #ffffff;
+    --bw-bg-soft:   #f5f5f5;
+    --bw-ink:       #0a0a0a;
+    --bw-ink-2:     #1a1a1a;
+    --bw-fg-1:      #0a0a0a;
+    --bw-fg-2:      #555555;
+    --bw-fg-3:      #8a8a8a;
+    --bw-border:    #e5e5e5;
+    --bw-border-2:  #d4d4d4;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-sans); background: var(--bw-bg); color: var(--bw-fg-1); -webkit-font-smoothing: antialiased; }
+
+  .container { max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+
+  /* ── Nav ────────────────────────────────────────────────────── */
+  .nav {
+    position: sticky; top: 0; z-index: 50;
+    backdrop-filter: blur(14px);
+    background: rgba(255, 255, 255, 0.82);
+    border-bottom: 1px solid var(--bw-border);
+  }
+  .nav-inner { display: flex; align-items: center; gap: 40px; height: 76px; }
+  .nav-logo img { height: 22px; display: block; filter: none; }
+  .nav-links { display: flex; gap: 32px; margin-left: 12px; }
+  .nav-links a {
+    color: var(--bw-fg-1); text-decoration: none;
+    font: 500 13px/1 var(--font-sans);
+    padding: 6px 0; position: relative;
+  }
+  .nav-links a::after {
+    content: ""; position: absolute; left: 0; right: 100%; bottom: -2px; height: 1px;
+    background: var(--bw-ink); transition: right 200ms ease;
+  }
+  .nav-links a:hover::after { right: 0; }
+  .nav-cta { margin-left: auto; display: flex; gap: 10px; }
+
+  /* ── Buttons ────────────────────────────────────────────────── */
+  .btn {
+    font: 500 13px/1 var(--font-sans); border-radius: 999px;
+    padding: 12px 22px; cursor: pointer; border: 1px solid transparent;
+    display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+    transition: background 180ms ease, color 180ms ease, border-color 180ms ease, transform 180ms ease;
+  }
+  .btn-primary { background: var(--bw-ink); color: white; }
+  .btn-primary:hover { background: var(--bw-fg-2); }
+  .btn-outline { background: transparent; color: var(--bw-fg-1); border-color: var(--bw-border-2); }
+  .btn-outline:hover { background: var(--bw-ink); color: white; border-color: var(--bw-ink); }
+  .btn-ghost { background: transparent; color: var(--bw-fg-1); }
+  .btn-ghost:hover { color: var(--bw-fg-2); }
+
+  /* ── Eyebrow ────────────────────────────────────────────────── */
+  .eyebrow {
+    font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--bw-fg-3);
+    display: inline-flex; align-items: center; gap: 12px;
+  }
+  .eyebrow::before {
+    content: ""; width: 24px; height: 1px; background: currentColor;
+  }
+  .eyebrow.on-dark { color: rgba(255, 255, 255, 0.6); }
+
+  /* ── Hero ───────────────────────────────────────────────────── */
+  .hero {
+    padding: 96px 0 64px; position: relative; overflow: hidden;
+    border-bottom: 1px solid var(--bw-border);
+  }
+  .hero-inner { position: relative; }
+  .hero h1 {
+    font: 600 96px/0.96 var(--font-sans);
+    letter-spacing: -0.04em; margin: 26px 0 0;
+    max-width: 1100px; text-wrap: balance;
+  }
+  .hero h1 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.03em;
+  }
+  .hero-foot {
+    display: grid; grid-template-columns: 1.4fr 1fr; gap: 64px;
+    align-items: end; margin-top: 56px;
+  }
+  .hero p.lead {
+    font: 400 18px/1.5 var(--font-sans); color: var(--bw-fg-2);
+    max-width: 480px; margin: 0;
+  }
+  .hero-cta { display: flex; gap: 12px; justify-content: flex-end; }
+
+  /* Hero canvas */
+  .hero-canvas {
+    margin-top: 80px;
+    background: var(--bw-bg-soft);
+    border-radius: 24px;
+    aspect-ratio: 21 / 9;
+    border: 1px solid var(--bw-border);
+    position: relative; overflow: hidden;
+    display: grid; place-items: center;
+  }
+  .hero-canvas::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--bw-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bw-border) 1px, transparent 1px);
+    background-size: 80px 80px;
+    opacity: 0.6;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+  }
+  .hero-canvas .placeholder {
+    position: relative;
+    font: 500 12px/1.6 var(--font-mono); color: var(--bw-fg-3);
+    text-align: center; padding: 24px 32px;
+    border: 1px dashed var(--bw-border-2);
+    border-radius: 8px; background: var(--bw-bg);
+  }
+
+  /* ── Trust strip ────────────────────────────────────────────── */
+  .trust {
+    padding: 40px 0; border-bottom: 1px solid var(--bw-border);
+  }
+  .trust-inner { display: flex; align-items: center; gap: 56px; flex-wrap: wrap; }
+  .trust .lbl {
+    font: 500 11px/1.4 var(--font-mono); letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--bw-fg-3);
+    flex-shrink: 0;
+  }
+  .trust .logos {
+    display: flex; gap: 56px; align-items: center; flex-wrap: wrap;
+    margin-left: auto;
+  }
+  .trust .logos span {
+    font: 600 18px/1 var(--font-sans);
+    color: var(--bw-fg-2); letter-spacing: -0.02em;
+    transition: color 180ms ease;
+  }
+  .trust .logos span:hover { color: var(--bw-ink); }
+
+  /* ── Section ────────────────────────────────────────────────── */
+  .section { padding: 128px 0; border-bottom: 1px solid var(--bw-border); }
+  .section-head {
+    display: grid; grid-template-columns: 1fr 1.4fr; gap: 64px;
+    align-items: end; margin-bottom: 64px;
+  }
+  .section-head h2 {
+    font: 600 64px/1.02 var(--font-sans); letter-spacing: -0.035em;
+    margin: 16px 0 0; text-wrap: balance;
+  }
+  .section-head h2 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+    letter-spacing: -0.025em;
+  }
+  .section-head .lead {
+    font: 400 17px/1.55 var(--font-sans); color: var(--bw-fg-2);
+    max-width: 480px; margin: 0;
+  }
+
+  /* ── Features ───────────────────────────────────────────────── */
+  .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .feature {
+    padding: 40px 32px 40px 0;
+    border-top: 1px solid var(--bw-border);
+    position: relative;
+    transition: padding 200ms ease;
+  }
+  .feature:nth-child(3n)  { padding-right: 0; }
+  .feature:nth-child(n+4) { border-bottom: none; }
+  .features .feature::after {
+    content: ""; position: absolute; top: 0; right: 0; bottom: 0;
+    width: 1px; background: var(--bw-border);
+  }
+  .features .feature:nth-child(3n)::after { display: none; }
+  .feature-num {
+    font: 500 11px/1 var(--font-mono); letter-spacing: 0.12em;
+    color: var(--bw-fg-3); margin-bottom: 28px;
+  }
+  .feature-icon {
+    width: 40px; height: 40px;
+    display: grid; place-items: center;
+    color: var(--bw-ink); margin-bottom: 24px;
+    border: 1px solid var(--bw-ink); border-radius: 8px;
+  }
+  .feature h3 {
+    font: 500 22px/1.2 var(--font-sans);
+    letter-spacing: -0.015em; margin: 0 0 12px;
+  }
+  .feature p {
+    font: 400 14px/1.6 var(--font-sans); color: var(--bw-fg-2);
+    margin: 0 0 20px;
+  }
+  .feature a {
+    font: 500 13px/1 var(--font-sans);
+    color: var(--bw-ink); text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--bw-ink);
+    padding-bottom: 3px;
+  }
+  .feature a .arr { transition: transform 180ms ease; }
+  .feature a:hover .arr { transform: translateX(4px); }
+
+  /* ── Split (dark) ───────────────────────────────────────────── */
+  .split {
+    padding: 128px 0; background: var(--bw-ink); color: white;
+    border-bottom: 1px solid var(--bw-ink);
+  }
+  .split-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: center;
+  }
+  .split h2 {
+    color: white;
+    font: 600 56px/1.02 var(--font-sans); letter-spacing: -0.035em;
+    margin: 16px 0 18px;
+  }
+  .split h2 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+  }
+  .split p.lead {
+    color: rgba(255, 255, 255, 0.6);
+    font: 400 17px/1.55 var(--font-sans);
+    max-width: 460px;
+  }
+  .split ul { list-style: none; padding: 0; margin: 40px 0 0; }
+  .split ul li {
+    font: 400 17px/1.5 var(--font-sans);
+    padding: 22px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    display: grid; grid-template-columns: 60px 1fr; gap: 16px; align-items: baseline;
+  }
+  .split ul li:last-child { border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+  .split ul li .num {
+    font: 500 11px/1 var(--font-mono); letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.4);
+  }
+
+  /* Split-art canvas */
+  .split-art {
+    aspect-ratio: 4/5;
+    background: var(--bw-ink-2);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: grid; place-items: center;
+    color: rgba(255, 255, 255, 0.4);
+    font: 500 12px/1.5 var(--font-mono); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .split-art::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .split-art .placeholder {
+    position: relative; padding: 24px 32px;
+    border: 1px dashed rgba(255, 255, 255, 0.18);
+    border-radius: 8px;
+  }
+
+  /* ── Vendors strip ──────────────────────────────────────────── */
+  .vendors-section {
+    padding: 128px 0; background: var(--bw-bg);
+    border-bottom: 1px solid var(--bw-border);
+  }
+  .vendors-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 80px;
+    align-items: center;
+  }
+  .vendors-art {
+    aspect-ratio: 4/5;
+    background: var(--bw-bg-soft); border-radius: 20px;
+    border: 1px solid var(--bw-border);
+    display: grid; place-items: center;
+    color: var(--bw-fg-3);
+    font: 500 12px/1.5 var(--font-mono); text-align: center;
+    position: relative; overflow: hidden;
+  }
+  .vendors-art::before {
+    content: ""; position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--bw-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bw-border) 1px, transparent 1px);
+    background-size: 60px 60px;
+    opacity: 0.6;
+  }
+  .vendors-art .placeholder {
+    position: relative; padding: 24px 32px;
+    border: 1px dashed var(--bw-border-2);
+    border-radius: 8px; background: var(--bw-bg);
+  }
+  .vendors-section h2 {
+    font: 600 56px/1.02 var(--font-sans); letter-spacing: -0.035em;
+    margin: 16px 0 18px;
+  }
+  .vendors-section h2 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+  }
+  .vendors-section p.lead {
+    font: 400 17px/1.55 var(--font-sans);
+    color: var(--bw-fg-2); max-width: 460px;
+  }
+  .vendor-list { list-style: none; padding: 0; margin: 40px 0 0; }
+  .vendor-list li {
+    padding: 22px 0; border-top: 1px solid var(--bw-border);
+    display: grid; grid-template-columns: 60px 1fr; gap: 16px;
+    font: 400 17px/1.5 var(--font-sans); align-items: baseline;
+  }
+  .vendor-list li:last-child { border-bottom: 1px solid var(--bw-border); }
+  .vendor-list li .num {
+    font: 500 11px/1 var(--font-mono); letter-spacing: 0.12em;
+    color: var(--bw-fg-3);
+  }
+
+  /* ── FAQ ────────────────────────────────────────────────────── */
+  .faq { padding: 128px 0; border-bottom: 1px solid var(--bw-border); }
+  .faq-inner { display: grid; grid-template-columns: 1fr 1.6fr; gap: 96px; }
+  .faq-head h2 {
+    font: 600 56px/1.02 var(--font-sans);
+    letter-spacing: -0.035em; margin: 16px 0 20px;
+  }
+  .faq-head h2 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+  }
+  .faq-head p {
+    font: 400 16px/1.6 var(--font-sans); color: var(--bw-fg-2);
+  }
+  details {
+    border-top: 1px solid var(--bw-border);
+    padding: 24px 0;
+    transition: padding 200ms;
+  }
+  details:last-of-type { border-bottom: 1px solid var(--bw-border); }
+  details[open] { padding-bottom: 28px; }
+  summary {
+    font: 500 19px/1.3 var(--font-sans); letter-spacing: -0.01em;
+    cursor: pointer; list-style: none;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 24px;
+  }
+  summary::-webkit-details-marker { display: none; }
+  summary::after {
+    content: ""; width: 14px; height: 14px; flex-shrink: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='%230a0a0a' stroke-width='1.5'><line x1='7' y1='1' x2='7' y2='13'/><line x1='1' y1='7' x2='13' y2='7'/></svg>");
+    transition: transform 200ms ease;
+  }
+  details[open] summary::after {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14' fill='none' stroke='%230a0a0a' stroke-width='1.5'><line x1='1' y1='7' x2='13' y2='7'/></svg>");
+  }
+  details p {
+    font: 400 15px/1.6 var(--font-sans);
+    color: var(--bw-fg-2); margin: 16px 0 0; max-width: 720px;
+  }
+
+  /* ── CTA banner ─────────────────────────────────────────────── */
+  .cta-banner {
+    padding: 128px 0; text-align: center;
+    border-bottom: 1px solid var(--bw-border);
+  }
+  .cta-banner h2 {
+    font: 600 80px/0.98 var(--font-sans);
+    letter-spacing: -0.04em; margin: 24px 0 32px;
+    text-wrap: balance; max-width: 900px; margin-left: auto; margin-right: auto;
+  }
+  .cta-banner h2 .italic {
+    font-style: italic;
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+  }
+  .cta-banner .actions {
+    display: inline-flex; gap: 12px;
+  }
+
+  /* ── Footer ─────────────────────────────────────────────────── */
+  footer {
+    background: var(--bw-ink); color: rgba(255, 255, 255, 0.55);
+    padding: 80px 0 32px;
+  }
+  .foot-top {
+    display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 56px;
+    padding-bottom: 64px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .foot-top h5 {
+    color: white; font: 500 11px/1 var(--font-mono);
+    letter-spacing: 0.16em; text-transform: uppercase; margin: 0 0 20px;
+  }
+  .foot-top a {
+    display: block; color: rgba(255, 255, 255, 0.55);
+    text-decoration: none; padding: 6px 0; font: 400 14px/1 var(--font-sans);
+    transition: color 180ms ease;
+  }
+  .foot-top a:hover { color: white; }
+  .foot-bot {
+    padding-top: 28px; display: flex; justify-content: space-between;
+    align-items: center; font: 400 12px/1 var(--font-mono);
+    color: rgba(255, 255, 255, 0.4);
+  }
+  .foot-logo img {
+    height: 22px; filter: invert(1) brightness(2); margin-bottom: 24px;
+  }
+  .foot-blurb {
+    font: 400 14px/1.6 var(--font-sans);
+    max-width: 320px; color: rgba(255, 255, 255, 0.55);
+  }
+
+  /* Massive Kraya wordmark in footer for editorial feel */
+  .foot-wordmark {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    line-height: 0;
+  }
+  .foot-wordmark span {
+    display: block;
+    font: 600 clamp(120px, 22vw, 320px)/0.85 var(--font-sans);
+    letter-spacing: -0.05em;
+    color: white;
+    text-align: center;
+    margin: 0;
+    padding: 32px 0 0;
+    user-select: none;
+  }
+</style>
+</head>
+<body class="kraya">
+
+  <!-- Top nav -->
+  <header class="nav">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo"><img src="../../assets/logo/kraya-logo-black.png" alt="kraya" /></a>
+      <nav class="nav-links">
+        <a href="#">Product</a>
+        <a href="#">Company</a>
+        <a href="#">Vendors</a>
+        <a href="#">Meets</a>
+        <a href="#">Careers</a>
+      </nav>
+      <div class="nav-cta">
+        <a class="btn btn-ghost" href="#">Sign in</a>
+        <a class="btn btn-primary" href="#">Request demo</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="container hero-inner">
+      <span class="eyebrow">For procurement teams</span>
+      <h1>Change the way<br/>you <span class="italic">procure</span>.</h1>
+      <div class="hero-foot">
+        <p class="lead">Empower your procurement process with seamless sourcing — saving time, reducing cost, and replacing email threads with one workspace.</p>
+        <div class="hero-cta">
+          <a class="btn btn-outline" href="#">Watch overview</a>
+          <a class="btn btn-primary" href="#">Get started
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="hero-canvas">
+        <div class="placeholder">[ Hero illustration ]<br/>Replace with kraya.io product render.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trust -->
+  <section class="trust">
+    <div class="container trust-inner">
+      <span class="lbl">Trusted by procurement teams at</span>
+      <div class="logos">
+        <span>Bharat&nbsp;Steel</span>
+        <span>Mahindra</span>
+        <span>L&amp;T</span>
+        <span>Tata</span>
+        <span>Godrej</span>
+        <span>Larsen Ind.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Features -->
+  <section class="section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">Capabilities</span>
+          <h2>Streamline procurement with <span class="italic">unmatched</span> features.</h2>
+        </div>
+        <p class="lead">Kraya helps you save time, energy and resources — streamlining operations with higher efficiency, transparency, and cost savings at every step.</p>
+      </div>
+
+      <div class="features">
+        <div class="feature">
+          <div class="feature-num">01 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <h3>Custom approval workflows</h3>
+          <p>Tailor approval flows with conditions for documents, vendors, and spend thresholds — enhancing efficiency and control.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+        <div class="feature">
+          <div class="feature-num">02 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          <h3>Compliance-driven vendor management</h3>
+          <p>Discover, onboard, build relationships, and stay compliant — vendor management without the spreadsheets.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+        <div class="feature">
+          <div class="feature-num">03 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg></div>
+          <h3>Smart sourcing automation</h3>
+          <p>Reverse auctions, e-sourcing, and real-time spend analysis — built for better decisions, faster.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+        <div class="feature">
+          <div class="feature-num">04 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 6h8M6 8v8M18 8v8M8 18h8"/></svg></div>
+          <h3>Advanced integration capabilities</h3>
+          <p>Plug into existing ERP systems and third-party services — Kraya fits the stack you already run on.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+        <div class="feature">
+          <div class="feature-num">05 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <h3>Enhanced collaboration tools</h3>
+          <p>Built-in logistics, supply-chain financing, and secure data sharing — better purchase experiences end-to-end.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+        <div class="feature">
+          <div class="feature-num">06 / 06</div>
+          <div class="feature-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+          <h3>Cost control &amp; budget management</h3>
+          <p>Optimize procurement budgets and unlock cost savings through strategic sourcing and real-time tracking.</p>
+          <a href="#">Read more <span class="arr">→</span></a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why split / dark -->
+  <section class="split">
+    <div class="container split-inner">
+      <div>
+        <span class="eyebrow on-dark">For senior management</span>
+        <h2>Why senior leadership chooses <span class="italic">Kraya</span>.</h2>
+        <p class="lead">Leverage Kraya's tools to drive business growth — across efficiency, accountability, and savings.</p>
+        <ul>
+          <li><span class="num">01</span>Mobile accessibility for on-the-go management.</li>
+          <li><span class="num">02</span>Advanced analytics for informed decision-making.</li>
+          <li><span class="num">03</span>Procurement with end-to-end transparency.</li>
+          <li><span class="num">04</span>Real-time tracking for better forecasting and inventory.</li>
+        </ul>
+      </div>
+      <div class="split-art">
+        <div class="placeholder">[ Dashboard illustration ]<br/>Analytics scene · monochrome render</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Vendors strip -->
+  <section class="vendors-section">
+    <div class="container vendors-inner">
+      <div class="vendors-art">
+        <div class="placeholder">[ Vendor portal illustration ]<br/>Supplier scene · monochrome render</div>
+      </div>
+      <div>
+        <span class="eyebrow">For vendors</span>
+        <h2>Why vendors choose <span class="italic">Kraya</span>.</h2>
+        <p class="lead">Efficient management, transparent communication, and growth opportunities — all in one supplier workspace.</p>
+        <ul class="vendor-list">
+          <li><span class="num">01</span>Simplified order management for vendors.</li>
+          <li><span class="num">02</span>Cleaner communication and transparency with buyers.</li>
+          <li><span class="num">03</span>Growth through contracts and supply-chain financing.</li>
+        </ul>
+        <a class="btn btn-primary" href="#" style="margin-top: 36px;">Become a vendor
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="faq">
+    <div class="container faq-inner">
+      <div class="faq-head">
+        <span class="eyebrow">FAQs</span>
+        <h2>Frequently <span class="italic">asked</span> questions.</h2>
+        <p>Answers about features, integrations, and support. Reach out if you don't see what you need.</p>
+      </div>
+      <div>
+        <details open>
+          <summary>What is Kraya?</summary>
+          <p>Kraya is an end-to-end procurement platform designed to streamline sourcing, enhance supplier management, and optimize the procurement process with advanced automation and real-time analytics.</p>
+        </details>
+        <details>
+          <summary>How does Kraya simplify procurement for companies?</summary>
+          <p>Automated workflows, real-time spend analysis, and integrated communication tools make it easier for companies to manage suppliers, control costs, and streamline procurement.</p>
+        </details>
+        <details>
+          <summary>What benefits do vendors receive from Kraya?</summary>
+          <p>Access to tenders, streamlined onboarding, free quotation management, and analytics designed to improve visibility and facilitate easier interactions with companies.</p>
+        </details>
+        <details>
+          <summary>Can Kraya integrate with existing ERP systems?</summary>
+          <p>Yes — Kraya supports integration with major ERP systems, ensuring seamless connectivity and data flow between your existing infrastructure and our platform.</p>
+        </details>
+        <details>
+          <summary>Is Kraya secure?</summary>
+          <p>End-to-end encryption and robust security measures protect your data and ensure compliance — a secure environment for all procurement activities.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA banner -->
+  <section class="cta-banner">
+    <div class="container">
+      <span class="eyebrow" style="justify-content: center;">Get started</span>
+      <h2>Procurement, <span class="italic">reimagined</span>.</h2>
+      <div class="actions">
+        <a class="btn btn-outline" href="#">Talk to sales</a>
+        <a class="btn btn-primary" href="#">Request demo
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <div class="container">
+      <div class="foot-top">
+        <div class="foot-logo">
+          <img src="../../assets/logo/kraya-logo-black.png" alt="kraya" />
+          <p class="foot-blurb">Empower your procurement process with seamless sourcing — saving time and reducing cost with Kraya.</p>
+        </div>
+        <div>
+          <h5>Explore</h5>
+          <a>Product</a><a>Vendors</a><a>Meets</a><a>Audit</a>
+        </div>
+        <div>
+          <h5>Company</h5>
+          <a>About</a><a>Careers</a><a>Contact</a><a>Press</a>
+        </div>
+        <div>
+          <h5>Get in touch</h5>
+          <a>sales@kraya.io</a><a>LinkedIn</a><a>Instagram</a><a>X / Twitter</a>
+        </div>
+      </div>
+      <div class="foot-bot">
+        <span>© Kraya Concepts Private Limited</span>
+        <span>India · 2026</span>
+      </div>
+    </div>
+    <div class="foot-wordmark"><span>kraya</span></div>
+  </footer>
+
+</body>
+</html>

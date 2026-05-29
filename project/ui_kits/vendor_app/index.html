@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya — Vendor App UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-sans); background: var(--kraya-paper); color: var(--fg-1); font-size: 14px; }
+
+  .app { display: grid; grid-template-columns: 220px 1fr; grid-template-rows: 56px 1fr; height: 100vh; min-height: 720px;}
+  .topbar { grid-column: 1 / -1; background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; padding: 0 20px; gap: 18px;}
+  .topbar img { height: 22px;}
+  .topbar .vendor-tag {
+    background: var(--kraya-red-soft); color: var(--kraya-red); padding: 4px 10px; border-radius: 999px;
+    font: 600 11px/1 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase;
+  }
+  .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 14px;}
+  .avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--neutral-200); color: var(--fg-2); display: grid; place-items: center; font: 600 12px/1 var(--font-sans);}
+  .topbar .business { display: flex; flex-direction: column; align-items: flex-end;}
+  .topbar .business .n { font: 600 13px/1 var(--font-sans); color: var(--fg-1);}
+  .topbar .business .s { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 3px;}
+
+  .sidebar { background: var(--bg-surface); border-right: 1px solid var(--border-subtle); padding: 16px 8px;}
+  .nav-sec { font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3); padding: 14px 12px 8px;}
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 6px; font: 500 13px/1 var(--font-sans); color: var(--fg-1); cursor: pointer;}
+  .nav-item:hover { background: var(--bg-subtle);}
+  .nav-item.active { background: var(--kraya-red-soft); color: var(--kraya-red); font-weight: 600;}
+  .nav-item .ico { width: 18px; height: 18px; color: var(--fg-3); flex-shrink: 0;}
+  .nav-item.active .ico { color: var(--kraya-red);}
+  .nav-item .badge { margin-left: auto; font: 600 10px/1 var(--font-mono); background: var(--kraya-red); color: white; padding: 3px 6px; border-radius: 999px;}
+
+  .canvas { overflow-y: auto; padding: 28px 32px 64px;}
+  .pagehead { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px;}
+  .pagehead h1 { font: 700 26px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 4px;}
+  .pagehead p { font: 400 13px/1.4 var(--font-sans); color: var(--fg-2); margin: 0;}
+
+  .btn { font: 600 13px/1 var(--font-sans); border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center; gap: 6px;}
+  .btn-primary { background: var(--kraya-red); color: white; box-shadow: var(--shadow-1);}
+  .btn-primary:hover { background: var(--kraya-red-hover);}
+  .btn-outline { background: var(--bg-surface); color: var(--fg-1); border-color: var(--border-default);}
+  .btn-outline:hover { background: var(--bg-subtle);}
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 24px;}
+  .stat { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;}
+  .stat .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 10px;}
+  .stat .v { font: 700 22px/1 var(--font-sans); letter-spacing: -0.02em; color: var(--fg-1);}
+
+  /* Tenders list */
+  .tender { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px;
+            padding: 18px 22px; margin-bottom: 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 22px; align-items: center;
+            box-shadow: var(--shadow-1); transition: box-shadow var(--dur-base), transform var(--dur-base); cursor: pointer;}
+  .tender:hover { box-shadow: var(--shadow-3); transform: translateY(-1px);}
+  .tender .icon-pill { width: 42px; height: 42px; border-radius: 10px; background: var(--kraya-red-soft); color: var(--kraya-red); display: grid; place-items: center;}
+  .tender h3 { font: 600 15px/1.25 var(--font-sans); margin: 0 0 4px;}
+  .tender .meta { display: flex; gap: 14px; align-items: center; font: 400 12px/1 var(--font-sans); color: var(--fg-3);}
+  .tender .meta span { display: inline-flex; align-items: center; gap: 5px;}
+  .tender .price { font: 700 18px/1 var(--font-mono); color: var(--fg-1);}
+  .tender .price-lbl { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px; text-align: right;}
+  .tender .right-col { display: flex; flex-direction: column; align-items: flex-end; gap: 10px;}
+
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font: 600 11px/1.2 var(--font-sans);}
+  .badge .b-dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor;}
+  .b-success { background: var(--success-soft); color: var(--success);}
+  .b-warning { background: var(--warning-soft); color: var(--warning);}
+  .b-danger  { background: var(--danger-soft);  color: var(--danger);}
+  .b-info    { background: var(--info-soft);    color: var(--info);}
+  .b-neutral { background: var(--neutral-100);  color: var(--neutral-700);}
+  .b-brand   { background: var(--kraya-red-soft); color: var(--kraya-red);}
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 20px;}
+  .tab { padding: 10px 14px; font: 500 13px/1 var(--font-sans); color: var(--fg-2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px;}
+  .tab:hover { color: var(--fg-1);}
+  .tab.active { color: var(--kraya-red); border-bottom-color: var(--kraya-red); font-weight: 600;}
+
+  .quote-form { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 24px; box-shadow: var(--shadow-1);}
+  .quote-form h3 { font: 600 16px/1 var(--font-sans); margin: 0 0 4px;}
+  .quote-form .sub { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 18px;}
+  .field { margin-bottom: 16px;}
+  .field label { display: block; font: 500 12px/1 var(--font-sans); color: var(--fg-2); margin-bottom: 6px;}
+  .field input, .field select, .field textarea {
+    width: 100%; padding: 10px 12px; border: 1px solid var(--border-default); border-radius: 6px;
+    font: 400 14px/1 var(--font-sans); color: var(--fg-1); background: var(--bg-surface); outline: none;
+  }
+  .field input:focus { border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft);}
+  .field .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px;}
+  .field .helper { font: 400 11px/1.4 var(--font-sans); color: var(--fg-3); margin-top: 6px;}
+
+  .lineitem { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 12px; align-items: end; padding: 14px 0; border-bottom: 1px dashed var(--border-subtle);}
+  .lineitem:last-child { border: none;}
+
+  .summary { background: var(--bg-canvas); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 16px;}
+  .summary-row { display: flex; justify-content: space-between; padding: 6px 0; font: 400 13px/1 var(--font-sans);}
+  .summary-row.total { font: 700 16px/1 var(--font-sans); color: var(--fg-1); border-top: 1px solid var(--border-subtle); margin-top: 8px; padding-top: 12px;}
+  .summary-row .num { font-family: var(--font-mono);}
+
+  .screen { display: none;}
+  .screen.active { display: block; }
+</style>
+</head>
+<body class="kraya">
+
+<div class="app">
+
+  <header class="topbar">
+    <img src="../../assets/logo/kraya-logo-black.png" alt="kraya" />
+    <span class="vendor-tag">Vendor</span>
+    <div class="right">
+      <button class="btn btn-outline">View buyer view</button>
+      <div class="business"><div class="n">Bharat Steel Co.</div><div class="s">GSTIN 27AAA…782J</div></div>
+      <div class="avatar">BS</div>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <div class="nav-sec">Vendor portal</div>
+    <div class="nav-item active" data-screen="tenders">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      Open tenders <span class="badge">12</span>
+    </div>
+    <div class="nav-item" data-screen="quote">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8M16 17H8"/></svg>
+      My quotations
+    </div>
+    <div class="nav-item" data-screen="tenders">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+      Orders &amp; dispatch
+    </div>
+    <div class="nav-item" data-screen="tenders">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Catalog
+    </div>
+
+    <div class="nav-sec">Growth</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+      Performance
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+      Supply-chain financing
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9 1.65 1.65 0 0 0 4.27 7.18l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Account settings
+    </div>
+  </aside>
+
+  <main class="canvas">
+
+    <!-- TENDERS -->
+    <section class="screen active" id="screen-tenders">
+      <div class="pagehead">
+        <div><h1>Open tenders</h1><p>12 RFQs matching your categories · 3 closing in the next 48 hours</p></div>
+        <button class="btn btn-outline">Filters</button>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="lbl">QUOTES SUBMITTED · 30d</div><div class="v">28</div></div>
+        <div class="stat"><div class="lbl">WIN RATE</div><div class="v">34%</div></div>
+        <div class="stat"><div class="lbl">AVG RESPONSE</div><div class="v">3.2<span style="font: 500 12px/1 var(--font-sans); color: var(--fg-2); margin-left: 4px;">hrs</span></div></div>
+        <div class="stat"><div class="lbl">ACTIVE ORDERS</div><div class="v">7</div></div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">For you <span style="color: var(--fg-3); margin-left: 4px;">12</span></div>
+        <div class="tab">All tenders <span style="color: var(--fg-3); margin-left: 4px;">147</span></div>
+        <div class="tab">Watching <span style="color: var(--fg-3); margin-left: 4px;">4</span></div>
+        <div class="tab">Closed <span style="color: var(--fg-3); margin-left: 4px;">86</span></div>
+      </div>
+
+      <div class="tender" data-go="quote">
+        <div class="icon-pill"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 12l9 4 9-4M3 17l9 4 9-4"/></svg></div>
+        <div>
+          <h3>Steel rods · 304L · 12,500 units</h3>
+          <div class="meta">
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Mumbai delivery</span>
+            <span>·</span>
+            <span>Posted by Acme Manufacturing</span>
+            <span>·</span>
+            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Closes in 2d</span>
+          </div>
+        </div>
+        <div class="right-col">
+          <span class="badge b-warning"><span class="b-dot"></span>Quote now</span>
+          <div><div class="price-lbl">Est. budget</div><div class="price">₹ 15.5 L</div></div>
+        </div>
+      </div>
+
+      <div class="tender">
+        <div class="icon-pill"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div>
+          <h3>Industrial bearings · SKF 6205-2RS · 4,200 units</h3>
+          <div class="meta"><span>Multi-location · Acme Mfg.</span><span>·</span><span>Live · 6d left</span><span>·</span><span>4 quotes so far</span></div>
+        </div>
+        <div class="right-col">
+          <span class="badge b-info"><span class="b-dot"></span>Open</span>
+          <div><div class="price-lbl">Est. budget</div><div class="price">₹ 6.5 L</div></div>
+        </div>
+      </div>
+
+      <div class="tender">
+        <div class="icon-pill"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+        <div>
+          <h3>Hydraulic hoses · SAE-100R2 · 900 m</h3>
+          <div class="meta"><span>Hazira · Reliance Engg.</span><span>·</span><span>9 quotes</span><span>·</span><span>Closed</span></div>
+        </div>
+        <div class="right-col">
+          <span class="badge b-success"><span class="b-dot"></span>Awarded</span>
+          <div><div class="price-lbl">Winning bid</div><div class="price" style="color: var(--success)">₹ 5.4 L</div></div>
+        </div>
+      </div>
+
+      <div class="tender">
+        <div class="icon-pill"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg></div>
+        <div>
+          <h3>Stainless steel sheets · 304 · 2mm · 1,800 sq.m</h3>
+          <div class="meta"><span>Chennai delivery · Bharat Engineering Works</span><span>·</span><span>Closes in 9d</span></div>
+        </div>
+        <div class="right-col">
+          <span class="badge b-brand"><span class="b-dot"></span>Recommended</span>
+          <div><div class="price-lbl">Est. budget</div><div class="price">₹ 22 L</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- QUOTE FORM -->
+    <section class="screen" id="screen-quote">
+      <div class="pagehead">
+        <div>
+          <p style="font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 6px;">RFQ-2026-0418 · Acme Manufacturing</p>
+          <h1>Submit quote — Steel rods · 304L</h1>
+          <p>Closes 29 May 2026, 18:00 IST · 12,500 units · Mumbai delivery</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-outline" data-go="tenders">← Back to tenders</button>
+          <button class="btn btn-outline">Save draft</button>
+          <button class="btn btn-primary">Submit quote →</button>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.8fr 1fr; gap: 20px;">
+        <div class="quote-form">
+          <h3>Line items</h3>
+          <div class="sub">Enter your best price per unit. Buyer will see all quotes side-by-side.</div>
+
+          <div class="lineitem">
+            <div class="field" style="margin: 0;"><label>Item description</label><input value="Steel rod · 304L · 16mm dia · 6m length" /></div>
+            <div class="field" style="margin: 0;"><label>Qty</label><input value="12,500" /></div>
+            <div class="field" style="margin: 0;"><label>Unit price (₹)</label><input value="118.40" /></div>
+            <div class="field" style="margin: 0;"><label>Lead time</label><input value="14 days" /></div>
+          </div>
+          <div class="lineitem">
+            <div class="field" style="margin: 0;"><label>Item description</label><input value="Mill test cert + dispatch handling" /></div>
+            <div class="field" style="margin: 0;"><label>Qty</label><input value="1" /></div>
+            <div class="field" style="margin: 0;"><label>Unit price (₹)</label><input value="8,500.00" /></div>
+            <div class="field" style="margin: 0;"><label>Lead time</label><input value="—" /></div>
+          </div>
+
+          <button class="btn btn-outline" style="margin-top: 12px;">+ Add line item</button>
+
+          <h3 style="margin-top: 28px;">Terms &amp; logistics</h3>
+          <div class="field"><label>Payment terms</label><select><option>Net 30 days</option><option>Net 45 days</option><option>Net 60 days</option></select></div>
+          <div class="field"><label>Delivery location</label><input value="Acme Plant, Andheri East, Mumbai 400069" /></div>
+          <div class="field"><label>Notes to buyer</label><textarea rows="3" placeholder="Anything the buyer should know about your quote…"></textarea></div>
+        </div>
+
+        <div>
+          <div class="summary">
+            <div class="summary-row"><span>Subtotal</span><span class="num">₹ 14,80,000.00</span></div>
+            <div class="summary-row"><span>Cert &amp; handling</span><span class="num">₹ 8,500.00</span></div>
+            <div class="summary-row"><span>GST (18%)</span><span class="num">₹ 2,67,930.00</span></div>
+            <div class="summary-row total"><span>Total quote</span><span class="num">₹ 17,56,430.00</span></div>
+          </div>
+
+          <div class="quote-form" style="margin-top: 16px; padding: 18px;">
+            <h3 style="font-size: 13px;">Competing quotes (sealed)</h3>
+            <div class="sub">You'll see ranks after submission.</div>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; font: 500 13px/1 var(--font-sans);"><span>Quotes received</span><span class="badge b-brand">8</span></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font: 500 13px/1 var(--font-sans);"><span>Low bid so far</span><span style="font-family: var(--font-mono); color: var(--success);">₹ 14.8 L</span></div>
+              <div style="display: flex; justify-content: space-between; align-items: center; font: 500 13px/1 var(--font-sans);"><span>Your position</span><span style="font-family: var(--font-mono); color: var(--fg-3);">— sealed —</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</div>
+
+<script>
+  const navItems = document.querySelectorAll(".nav-item[data-screen]");
+  const screens = document.querySelectorAll(".screen");
+  function show(name) {
+    screens.forEach(s => s.classList.toggle("active", s.id === "screen-" + name));
+    navItems.forEach(n => n.classList.toggle("active", n.dataset.screen === name));
+    document.querySelector(".canvas").scrollTop = 0;
+  }
+  navItems.forEach(n => n.addEventListener("click", () => show(n.dataset.screen)));
+  document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", (e) => { e.preventDefault(); show(el.dataset.go); }));
+</script>
+</body>
+</html>

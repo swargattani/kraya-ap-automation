@@ -1,0 +1,44 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans); }
+  .banner { display: flex; align-items: center; gap: 14px; padding: 14px 18px; border-radius: 10px; margin-bottom: 12px;
+             font: 500 13px/1.4 var(--font-sans);}
+  .banner .ico { width: 32px; height: 32px; border-radius: 999px; display: grid; place-items: center; flex-shrink: 0; }
+  .banner.extend { background: var(--warning-soft); color: var(--warning); border: 1px solid #F3D9A5;}
+  .banner.extend .ico { background: var(--warning); color: white;}
+  .banner.closing { background: var(--danger-soft); color: var(--danger); border: 1px solid #F0B6B0;}
+  .banner.closing .ico { background: var(--danger); color: white;}
+  .banner.awarded { background: var(--success-soft); color: var(--success); border: 1px solid #B6DCC6;}
+  .banner.awarded .ico { background: var(--success); color: white;}
+  .banner strong { font-weight: 700;}
+  .banner .right { margin-left: auto; font: 500 11px/1 var(--font-mono); }
+  .banner a { color: inherit; font-weight: 600; text-decoration: underline; margin-left: auto;}
+</style>
+</head><body>
+  <div class="banner extend">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+    <div>
+      <div><strong>Auction extended by 2 minutes.</strong> A new bid was placed in the final 60 seconds — anti-sniping rule triggered.</div>
+    </div>
+    <span class="right">+02:00</span>
+  </div>
+
+  <div class="banner closing">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>
+    <div>
+      <div><strong>Closing in under 1 minute.</strong> Submit your final bid now — late bids will not be accepted.</div>
+    </div>
+    <a href="#">Place bid →</a>
+  </div>
+
+  <div class="banner awarded">
+    <span class="ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="m5 12 5 5L20 7"/></svg></span>
+    <div>
+      <div><strong>Auction awarded to Bharat Steel Co.</strong> Final price ₹14,68,500 · 5.4% below starting · PO-2026-04711 issued.</div>
+    </div>
+  </div>
+</body></html>

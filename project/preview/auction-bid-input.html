@@ -1,0 +1,59 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans); }
+  .panel { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 22px; max-width: 520px;}
+  .hdr { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; }
+  .hdr .l { font: 500 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;}
+  .leader { font: 600 13px/1 var(--font-sans); color: var(--fg-1); }
+  .lead-bid { font: 600 14px/1 var(--font-mono); color: var(--success); }
+
+  .input-row { display: flex; gap: 8px; align-items: stretch; margin-bottom: 14px;}
+  .bid-input {
+    flex: 1; padding: 14px 16px; border: 1.5px solid var(--border-default); border-radius: 8px;
+    font: 600 22px/1 var(--font-mono); color: var(--fg-1); background: var(--bg-surface); outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .bid-input:focus { border-color: var(--kraya-red); box-shadow: 0 0 0 4px var(--kraya-red-soft);}
+  .currency { display: grid; place-items: center; padding: 0 14px; background: var(--bg-canvas); border: 1.5px solid var(--border-default); border-right: none; border-radius: 8px 0 0 8px; font: 600 16px/1 var(--font-sans); color: var(--fg-2); margin-right: -8px;}
+  .quick { display: flex; gap: 6px; margin-bottom: 16px;}
+  .qb { flex: 1; padding: 7px 0; border-radius: 6px; background: var(--bg-canvas); border: 1px solid var(--border-default); cursor: pointer;
+         font: 500 12px/1 var(--font-sans); color: var(--fg-1); }
+  .qb:hover { background: var(--bg-subtle); }
+  .submit { padding: 12px 18px; background: var(--kraya-red); color: white; border-radius: 8px; border: none; cursor: pointer;
+            font: 600 14px/1 var(--font-sans); display: inline-flex; align-items: center; gap: 8px;}
+  .submit:hover { background: var(--kraya-red-hover);}
+  .footer { font: 400 11px/1.4 var(--font-sans); color: var(--fg-3); display: flex; justify-content: space-between;}
+</style>
+</head><body>
+  <div class="panel">
+    <div class="hdr">
+      <div>
+        <div class="l">YOUR BID</div>
+        <div style="font: 500 12px/1 var(--font-sans); color: var(--fg-2);">Currently <strong style="color: var(--auction-extended)">rank #2</strong> · improve to win</div>
+      </div>
+      <div style="text-align: right;">
+        <div class="l">LEAD BID</div>
+        <div class="lead-bid">₹ 14,68,500</div>
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="currency">₹</div>
+      <input class="bid-input" value="14,65,000" />
+      <button class="submit">Place bid →</button>
+    </div>
+    <div class="quick">
+      <button class="qb">−1% · ₹14.59L</button>
+      <button class="qb">−2% · ₹14.45L</button>
+      <button class="qb">Match lead · ₹14.68L</button>
+      <button class="qb">Beat lead · ₹14.65L</button>
+    </div>
+    <div class="footer">
+      <span>Min decrement <strong style="color: var(--fg-1)">₹500</strong> · GST excluded</span>
+      <span>You can revise until <strong style="color: var(--fg-1)">close</strong></span>
+    </div>
+  </div>
+</body></html>

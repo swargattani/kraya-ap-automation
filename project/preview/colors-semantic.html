@@ -1,0 +1,33 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .pair { border-radius: 10px; overflow: hidden; border: 1px solid var(--border-subtle); }
+  .top { padding: 18px 14px; color: #fff; font: 600 13px/1.2 var(--font-sans); }
+  .top .h { font: 500 11px/1 var(--font-mono); opacity: 0.85; margin-top: 4px; }
+  .bot { padding: 12px 14px; font: 500 12px/1.2 var(--font-sans); }
+  .bot .h { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 4px; }
+</style>
+</head><body>
+  <div class="grid">
+    <div class="pair">
+      <div class="top" style="background: var(--success)">Success<div class="h">#2E7D5B</div></div>
+      <div class="bot" style="background: var(--success-soft); color: var(--success)">Soft<div class="h">#E4F1EA</div></div>
+    </div>
+    <div class="pair">
+      <div class="top" style="background: var(--warning)">Warning<div class="h">#B5731A</div></div>
+      <div class="bot" style="background: var(--warning-soft); color: var(--warning)">Soft<div class="h">#FAEFD9</div></div>
+    </div>
+    <div class="pair">
+      <div class="top" style="background: var(--danger)">Danger<div class="h">#C0392B</div></div>
+      <div class="bot" style="background: var(--danger-soft); color: var(--danger)">Soft<div class="h">#FBE9E7</div></div>
+    </div>
+    <div class="pair">
+      <div class="top" style="background: var(--info)">Info<div class="h">#2E6FAE</div></div>
+      <div class="bot" style="background: var(--info-soft); color: var(--info)">Soft<div class="h">#E4EEF7</div></div>
+    </div>
+  </div>
+</body></html>

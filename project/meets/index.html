@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya · Live Buyer–Seller Meets</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; font-family: var(--font-sans); }
+  #root { width: 100%; height: 100%; }
+  .km-artboard-host { width: 100%; height: 100%; overflow: hidden; background: var(--kraya-paper); }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="shell.jsx"></script>
+  <script type="text/babel" src="screens-bigscreen.jsx"></script>
+  <script type="text/babel" src="screens-buyer.jsx"></script>
+  <script type="text/babel" src="screens-vendor-admin.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "showFlow": "all"
+    }/*EDITMODE-END*/;
+
+    function App() {
+      useTweaks(TWEAK_DEFAULTS);
+
+      return (
+        <>
+          <DesignCanvas>
+            <DCSection
+              id="bigscreen"
+              title="01 · Big screen — in the room"
+              subtitle="The 65″ display in the event hall. Each item rotates as the featured deal with its own QR code. Buyers in the room scan to book or buy.">
+              <DCArtboard id="bigscreen-1" label="Big-screen display · live deal" width={1920} height={1080}>
+                <div className="km-artboard-host"><BigScreen /></div>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection
+              id="buyer-mobile"
+              title="02 · Buyer · mobile flow"
+              subtitle="The buyer's phone — from arriving at the event, to scanning a QR off the big screen, to paying the vendor.">
+              <DCArtboard id="b-entry"   label="01 · Entry / check-in" width={390} height={844}>
+                <div className="km-artboard-host"><BuyerEntry /></div>
+              </DCArtboard>
+              <DCArtboard id="b-feed"    label="02 · Live deals feed" width={390} height={844}>
+                <div className="km-artboard-host"><BuyerLiveFeed /></div>
+              </DCArtboard>
+              <DCArtboard id="b-detail"  label="03 · Product detail (after scan)" width={390} height={920}>
+                <div className="km-artboard-host"><BuyerProductDetail /></div>
+              </DCArtboard>
+              <DCArtboard id="b-pay"     label="04 · Checkout / payment" width={390} height={1020}>
+                <div className="km-artboard-host"><BuyerCheckout /></div>
+              </DCArtboard>
+              <DCArtboard id="b-confirm" label="05 · Order confirmation" width={390} height={1020}>
+                <div className="km-artboard-host"><BuyerConfirmation /></div>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection
+              id="vendor"
+              title="03 · Vendor · desktop"
+              subtitle="Vendor workspace before and during the event — set event-only prices, link the bank account, then watch orders settle live.">
+              <DCArtboard id="v-setup" label="01 · Item setup · special prices &amp; bank link" width={1440} height={1280}>
+                <div className="km-artboard-host"><VendorItemSetup /></div>
+              </DCArtboard>
+              <DCArtboard id="v-live"  label="02 · Live booth · orders, stock, settlements" width={1440} height={1340}>
+                <div className="km-artboard-host"><VendorLiveBooth /></div>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection
+              id="admin"
+              title="04 · Organizer · event control room"
+              subtitle="Association (VIA) secretariat runs the live event — controls the big screen, monitors GMV, announces to the room.">
+              <DCArtboard id="a-control" label="Event control room (live)" width={1440} height={1340}>
+                <div className="km-artboard-host"><AdminControlRoom /></div>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel defaults={TWEAK_DEFAULTS} title="Tweaks">
+            <TweakSection title="About this canvas">
+              <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: 0 }}>
+                9 screens across 4 surfaces — the big screen in the room, the buyer's phone flow,
+                the vendor's desktop (pre-event + live), and the organizer's control room.
+              </p>
+              <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: "10px 0 0" }}>
+                Drag artboards to reorder. Click expand (↗) on any artboard to view it fullscreen.
+              </p>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

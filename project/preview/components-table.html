@@ -1,0 +1,32 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 18px 22px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  table { width: 100%; border-collapse: collapse; background: var(--bg-surface); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-2);}
+  th { text-align: left; font: 600 11px/1.4 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--fg-3);
+       background: var(--bg-canvas); padding: 10px 14px; border-bottom: 1px solid var(--border-subtle);}
+  td { font: 400 13px/1.4 var(--font-sans); color: var(--fg-1); padding: 11px 14px; border-bottom: 1px solid var(--border-subtle);}
+  tr:last-child td { border-bottom: none;}
+  tr:hover td { background: var(--bg-canvas);}
+  .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right;}
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 3px 9px; border-radius: 999px; font: 600 11px/1.2 var(--font-sans);}
+  .dot { width: 6px; height: 6px; border-radius: 999px; background: currentColor;}
+  .b-success { background: var(--success-soft); color: var(--success);}
+  .b-warning { background: var(--warning-soft); color: var(--warning);}
+  .b-info    { background: var(--info-soft);    color: var(--info);}
+</style>
+</head><body>
+  <table>
+    <thead><tr>
+      <th>PO #</th><th>Vendor</th><th>Status</th><th class="num">Amount</th><th class="num">Quotes</th>
+    </tr></thead>
+    <tbody>
+      <tr><td>PO-2026-04711</td><td>Bharat Steel Co.</td><td><span class="badge b-success"><span class="dot"></span>Approved</span></td><td class="num">₹ 14,82,500</td><td class="num">8</td></tr>
+      <tr><td>PO-2026-04702</td><td>Mahindra Logistics</td><td><span class="badge b-warning"><span class="dot"></span>Pending</span></td><td class="num">₹ 3,17,900</td><td class="num">4</td></tr>
+      <tr><td>PO-2026-04698</td><td>Tata Components</td><td><span class="badge b-info"><span class="dot"></span>In Review</span></td><td class="num">₹ 22,40,000</td><td class="num">11</td></tr>
+      <tr><td>PO-2026-04695</td><td>Larsen Industrial</td><td><span class="badge b-success"><span class="dot"></span>Approved</span></td><td class="num">₹ 1,08,200</td><td class="num">3</td></tr>
+    </tbody>
+  </table>
+</body></html>

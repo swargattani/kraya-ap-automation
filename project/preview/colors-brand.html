@@ -1,0 +1,36 @@
+<!-- @dsCard group="Colors" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--kraya-paper); }
+  .row { display: flex; gap: 12px; align-items: stretch; }
+  .swatch { flex: 1; border-radius: 10px; padding: 16px; min-height: 140px;
+            display: flex; flex-direction: column; justify-content: space-between;
+            border: 1px solid var(--border-subtle); }
+  .swatch .name { font: 600 14px/1.2 var(--font-sans); color: var(--fg-inverse); }
+  .swatch .hex  { font: 500 12px/1.2 var(--font-mono); color: rgba(255,255,255,0.9); }
+  .swatch.alt .name, .swatch.alt .hex { color: var(--fg-1); }
+  .swatch.alt .hex { color: var(--fg-2); }
+  .big { flex: 2.2; }
+</style>
+</head><body>
+  <div class="row">
+    <div class="swatch big" style="background: var(--kraya-red)">
+      <div class="name">Kraya Red — Primary</div>
+      <div class="hex">#D8261C · var(--kraya-red)</div>
+    </div>
+    <div class="swatch" style="background: var(--kraya-red-hover)">
+      <div class="name">Red Hover</div>
+      <div class="hex">#B81E15</div>
+    </div>
+    <div class="swatch" style="background: var(--kraya-red-press)">
+      <div class="name">Red Press</div>
+      <div class="hex">#9C170F</div>
+    </div>
+    <div class="swatch alt" style="background: var(--kraya-red-soft); border-color: var(--kraya-red-tint)">
+      <div class="name">Red Soft</div>
+      <div class="hex">#FBE9E7</div>
+    </div>
+  </div>
+</body></html>

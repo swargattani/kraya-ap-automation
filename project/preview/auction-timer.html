@@ -1,0 +1,32 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 28px; background: var(--kraya-paper); font-family: var(--font-sans); }
+  .row { display: flex; gap: 36px; align-items: flex-end; }
+  .col { display: flex; flex-direction: column; gap: 6px; }
+  .lbl { font: 500 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3);}
+  .small { font-size: 16px; }
+  .med { font-size: 32px; }
+  .big { font-size: 56px; }
+  .lbl-row { font: 500 10px/1 var(--font-mono); color: var(--fg-3); display: flex; gap: 4px; align-items: baseline; margin-top: 6px;}
+</style>
+</head><body>
+  <div class="row">
+    <div class="col">
+      <span class="lbl">CLOSES IN · 36 H</span>
+      <div class="kx-timer big"><span class="seg">36</span><span class="sep">:</span><span class="seg">12</span><span class="sep">:</span><span class="seg">08</span></div>
+      <div class="lbl-row">h&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;m&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;s</div>
+    </div>
+    <div class="col">
+      <span class="lbl" style="color: var(--auction-extended)">EXTENDED · 4 MIN</span>
+      <div class="kx-timer med warn"><span class="seg">00</span><span class="sep">:</span><span class="seg">04</span><span class="sep">:</span><span class="seg">22</span></div>
+    </div>
+    <div class="col">
+      <span class="lbl" style="color: var(--auction-closing)">CLOSING</span>
+      <div class="kx-timer med danger"><span class="seg">00</span><span class="sep">:</span><span class="seg">00</span><span class="sep">:</span><span class="seg">38</span></div>
+    </div>
+  </div>
+</body></html>

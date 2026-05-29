@@ -1,0 +1,551 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya — Buyer App UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="stylesheet" href="../../colors_and_type.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: var(--font-sans); background: var(--kraya-paper); color: var(--fg-1); font-size: 14px; }
+
+  /* ─── App shell ─────────────────────────────────────────────── */
+  .app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 56px 1fr; height: 100vh; min-height: 720px; }
+  .topbar { grid-column: 1 / -1; display: flex; align-items: center; background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle); padding: 0 20px; gap: 20px; }
+  .topbar-logo img { height: 22px; display: block; }
+  .topbar-search { flex: 1; max-width: 480px; position: relative; }
+  .topbar-search input {
+    width: 100%; padding: 8px 12px 8px 36px;
+    border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-canvas);
+    font: 400 13px/1 var(--font-sans); color: var(--fg-1); outline: none;
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+  }
+  .topbar-search input:focus { border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft); background: var(--bg-surface);}
+  .topbar-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--fg-3);}
+  .topbar-actions { margin-left: auto; display: flex; gap: 10px; align-items: center;}
+  .icon-btn { width: 34px; height: 34px; border-radius: 8px; display: grid; place-items: center; cursor: pointer;
+              background: transparent; border: none; color: var(--fg-2); position: relative; }
+  .icon-btn:hover { background: var(--bg-subtle); color: var(--fg-1);}
+  .icon-btn .dot { position: absolute; top: 8px; right: 8px; width: 7px; height: 7px; border-radius: 999px; background: var(--kraya-red);
+                   border: 1.5px solid var(--bg-surface);}
+  .avatar { width: 32px; height: 32px; border-radius: 999px; background: var(--neutral-200); color: var(--fg-2);
+            display: grid; place-items: center; font: 600 12px/1 var(--font-sans); margin-left: 4px;}
+
+  /* ─── Sidebar ────────────────────────────────────────────────── */
+  .sidebar { background: var(--bg-surface); border-right: 1px solid var(--border-subtle); padding: 16px 8px; overflow-y: auto;}
+  .nav-sec { font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-3);
+             padding: 14px 12px 8px; }
+  .nav-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px; border-radius: 6px; font: 500 13px/1 var(--font-sans);
+              color: var(--fg-1); cursor: pointer; user-select: none; }
+  .nav-item:hover { background: var(--bg-subtle); }
+  .nav-item.active { background: var(--kraya-red-soft); color: var(--kraya-red); font-weight: 600;}
+  .nav-item .ico { width: 18px; height: 18px; color: var(--fg-3); flex-shrink: 0;}
+  .nav-item.active .ico { color: var(--kraya-red);}
+  .nav-item .badge { margin-left: auto; font: 600 10px/1 var(--font-mono); background: var(--bg-canvas); color: var(--fg-2);
+                     padding: 3px 6px; border-radius: 999px; border: 1px solid var(--border-subtle);}
+  .nav-item.active .badge { background: white; color: var(--kraya-red); border-color: var(--kraya-red-tint);}
+
+  /* ─── Main canvas ────────────────────────────────────────────── */
+  .canvas { overflow-y: auto; padding: 28px 32px 64px; }
+  .pagehead { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 24px;}
+  .pagehead h1 { font: 700 28px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 4px;}
+  .pagehead p { font: 400 13px/1.4 var(--font-sans); color: var(--fg-2); margin: 0;}
+  .pagehead .btns { display: flex; gap: 8px;}
+
+  .btn { font: 600 13px/1 var(--font-sans); border-radius: 8px; padding: 9px 14px; cursor: pointer;
+         border: 1px solid transparent; display: inline-flex; align-items: center; gap: 6px;
+         transition: background var(--dur-fast), box-shadow var(--dur-fast);}
+  .btn-primary { background: var(--kraya-red); color: white; box-shadow: var(--shadow-1);}
+  .btn-primary:hover { background: var(--kraya-red-hover); box-shadow: var(--shadow-2);}
+  .btn-outline { background: var(--bg-surface); color: var(--fg-1); border-color: var(--border-default);}
+  .btn-outline:hover { background: var(--bg-subtle);}
+
+  /* tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-subtle); margin-bottom: 24px;}
+  .tab { padding: 10px 14px; font: 500 13px/1 var(--font-sans); color: var(--fg-2); cursor: pointer;
+         border-bottom: 2px solid transparent; margin-bottom: -1px;}
+  .tab:hover { color: var(--fg-1);}
+  .tab.active { color: var(--kraya-red); border-bottom-color: var(--kraya-red); font-weight: 600;}
+
+  /* Stat row */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;}
+  .stat { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px;
+          padding: 18px 20px; box-shadow: var(--shadow-1);}
+  .stat .lbl { font: 600 10px/1 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 10px;}
+  .stat .v { font: 700 26px/1 var(--font-sans); letter-spacing: -0.02em; color: var(--fg-1); display: flex; align-items: baseline; gap: 6px;}
+  .stat .u { font: 500 13px/1 var(--font-sans); color: var(--fg-2);}
+  .stat .delta { font: 600 12px/1 var(--font-mono); color: var(--success); margin-top: 8px; display: inline-flex; align-items: center; gap: 4px;}
+  .stat .delta.down { color: var(--danger);}
+  .stat.brand .lbl { color: rgba(255,255,255,0.7);}
+  .stat.brand { background: var(--kraya-ink); border-color: var(--kraya-ink-2); color: white;}
+  .stat.brand .v, .stat.brand .u { color: white;}
+
+  /* Two-col layout */
+  .grid-2 { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px;}
+
+  /* Cards */
+  .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px;
+          box-shadow: var(--shadow-1); overflow: hidden;}
+  .card-h { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle);}
+  .card-h h3 { font: 600 14px/1 var(--font-sans); margin: 0;}
+  .card-h .meta { font: 400 12px/1 var(--font-sans); color: var(--fg-3);}
+  .card-b { padding: 16px 20px;}
+
+  /* Chart */
+  .chart { height: 220px; display: flex; align-items: flex-end; gap: 14px; padding: 0 8px 16px;}
+  .bar { flex: 1; background: var(--neutral-200); border-radius: 4px 4px 0 0; position: relative; transition: background var(--dur-fast);}
+  .bar.brand { background: var(--kraya-red);}
+  .bar:hover { background: var(--kraya-red-hover);}
+  .bar .v { position: absolute; bottom: -22px; left: 0; right: 0; text-align: center; font: 500 10px/1 var(--font-mono); color: var(--fg-3);}
+  .chart-x { display: flex; gap: 14px; padding: 8px 8px 0; }
+  .chart-x span { flex: 1; text-align: center; font: 500 11px/1 var(--font-sans); color: var(--fg-3);}
+
+  /* Activity list */
+  .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border-subtle); align-items: flex-start;}
+  .activity-item:last-child { border: none; padding-bottom: 0;}
+  .activity-item .av { width: 28px; height: 28px; border-radius: 999px; flex-shrink: 0; display: grid; place-items: center;
+                       background: var(--neutral-100); color: var(--fg-2); font: 600 11px/1 var(--font-sans);}
+  .activity-item .av.ok { background: var(--success-soft); color: var(--success);}
+  .activity-item .av.warn { background: var(--warning-soft); color: var(--warning);}
+  .activity-item .av.danger { background: var(--danger-soft); color: var(--danger);}
+  .activity-item .av.brand { background: var(--kraya-red-soft); color: var(--kraya-red);}
+  .activity-item .body { flex: 1; }
+  .activity-item .body p { font: 400 13px/1.4 var(--font-sans); color: var(--fg-1); margin: 0;}
+  .activity-item .body p strong { font-weight: 600;}
+  .activity-item .body .when { font: 400 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 4px; display: block;}
+
+  /* Table */
+  table { width: 100%; border-collapse: collapse;}
+  th { text-align: left; font: 600 10px/1.4 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3);
+       padding: 12px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-canvas);}
+  td { font: 400 13px/1.4 var(--font-sans); color: var(--fg-1); padding: 13px 16px; border-bottom: 1px solid var(--border-subtle);}
+  tr:hover td { background: var(--bg-canvas);}
+  tr:last-child td { border-bottom: none;}
+  td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right;}
+  td .v-cell { display: flex; align-items: center; gap: 10px;}
+  td .av-sm { width: 26px; height: 26px; border-radius: 999px; background: var(--neutral-200); color: var(--fg-2); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);}
+
+  /* Badges */
+  .badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font: 600 11px/1.2 var(--font-sans);}
+  .badge .b-dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor;}
+  .b-success { background: var(--success-soft); color: var(--success);}
+  .b-warning { background: var(--warning-soft); color: var(--warning);}
+  .b-danger  { background: var(--danger-soft);  color: var(--danger);}
+  .b-info    { background: var(--info-soft);    color: var(--info);}
+  .b-neutral { background: var(--neutral-100);  color: var(--neutral-700);}
+  .b-brand   { background: var(--kraya-red-soft); color: var(--kraya-red);}
+
+  /* Filter bar */
+  .filterbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center;}
+  .pill-btn { padding: 7px 12px; border-radius: 999px; background: var(--bg-surface); border: 1px solid var(--border-default);
+              font: 500 12px/1 var(--font-sans); color: var(--fg-1); cursor: pointer; display: inline-flex; gap: 6px; align-items: center;}
+  .pill-btn:hover { background: var(--bg-subtle);}
+  .pill-btn.active { background: var(--kraya-ink); color: white; border-color: var(--kraya-ink);}
+
+  /* Vendors view */
+  .vendor-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;}
+  .vendor-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;
+                 box-shadow: var(--shadow-1); transition: box-shadow var(--dur-base), transform var(--dur-base);}
+  .vendor-card:hover { box-shadow: var(--shadow-3); transform: translateY(-2px); cursor: pointer;}
+  .vendor-card .head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px;}
+  .vendor-card .logo { width: 40px; height: 40px; border-radius: 8px; background: var(--neutral-100); display: grid; place-items: center;
+                       font: 700 14px/1 var(--font-sans); color: var(--fg-2);}
+  .vendor-card h4 { font: 600 14px/1.2 var(--font-sans); margin: 0;}
+  .vendor-card .sub { font: 400 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 3px;}
+  .vendor-card .stats-row { display: flex; gap: 16px; margin-bottom: 14px; padding: 14px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);}
+  .vendor-card .stats-row > div { flex: 1; }
+  .vendor-card .stats-row .lbl { font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;}
+  .vendor-card .stats-row .val { font: 600 16px/1 var(--font-sans); color: var(--fg-1); letter-spacing: -0.01em;}
+  .vendor-card .tags { display: flex; gap: 5px; flex-wrap: wrap;}
+
+  /* Hidden screens */
+  .screen { display: none;}
+  .screen.active { display: block; }
+</style>
+</head>
+<body class="kraya">
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="topbar-logo"><img src="../../assets/logo/kraya-logo-black.png" alt="kraya" /></div>
+    <div class="topbar-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input placeholder="Search POs, vendors, RFQs… ⌘K" />
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>
+        <span class="dot"></span>
+      </button>
+      <button class="icon-btn" title="Help">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.8.4-1 1-1 1.7M12 17v.01"/></svg>
+      </button>
+      <button class="icon-btn" title="Settings">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9 1.65 1.65 0 0 0 4.27 7.18l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="avatar">RS</div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="nav-sec">Procurement</div>
+    <div class="nav-item active" data-screen="dashboard">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </div>
+    <div class="nav-item" data-screen="orders">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+      Purchase Orders <span class="badge">42</span>
+    </div>
+    <div class="nav-item" data-screen="rfq">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      RFQs &amp; Auctions <span class="badge">8</span>
+    </div>
+    <div class="nav-item" data-screen="vendors">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      Vendors
+    </div>
+    <div class="nav-item" data-screen="dashboard">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 3 5-6"/></svg>
+      Spend Analytics
+    </div>
+    <div class="nav-item" data-screen="dashboard">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M8 13h8M8 17h5"/></svg>
+      Audit Trail
+    </div>
+
+    <div class="nav-sec">Workspace</div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-7l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2Z"/></svg>
+      Catalogs
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="6" cy="18" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 6h8M6 8v8M18 8v8M8 18h8"/></svg>
+      Integrations
+    </div>
+    <div class="nav-item">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/></svg>
+      Settings
+    </div>
+  </aside>
+
+  <!-- CANVAS — multi-screen, single-active -->
+  <main class="canvas">
+
+    <!-- ─── SCREEN: Dashboard ───────────────────────────────── -->
+    <section class="screen active" id="screen-dashboard">
+      <div class="pagehead">
+        <div>
+          <h1>Good afternoon, Riya.</h1>
+          <p>Here's what's happening in your procurement pipeline today.</p>
+        </div>
+        <div class="btns">
+          <button class="btn btn-outline">Export</button>
+          <button class="btn btn-primary">+ New Request</button>
+        </div>
+      </div>
+
+      <div class="stats">
+        <div class="stat brand">
+          <div class="lbl">SPEND · 30 DAYS</div>
+          <div class="v">₹ 4.82<span class="u">Cr</span></div>
+          <div class="delta" style="color: #6FD1A4">↑ 12.4% vs prev</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">OPEN POs</div>
+          <div class="v">42 <span class="u">orders</span></div>
+          <div class="delta down">↓ 6.2% vs prev</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">PENDING APPROVALS</div>
+          <div class="v">7</div>
+          <div class="delta" style="color: var(--warning)">3 over 24h</div>
+        </div>
+        <div class="stat">
+          <div class="lbl">SAVINGS · QTD</div>
+          <div class="v">₹ 38.2<span class="u">L</span></div>
+          <div class="delta">↑ on target</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-h">
+            <h3>Spend by category</h3>
+            <span class="meta">Last 6 months</span>
+          </div>
+          <div class="card-b">
+            <div class="chart">
+              <div class="bar" style="height: 32%"><span class="v">28L</span></div>
+              <div class="bar" style="height: 52%"><span class="v">42L</span></div>
+              <div class="bar" style="height: 41%"><span class="v">34L</span></div>
+              <div class="bar" style="height: 68%"><span class="v">54L</span></div>
+              <div class="bar" style="height: 78%"><span class="v">62L</span></div>
+              <div class="bar brand" style="height: 90%"><span class="v">71L</span></div>
+            </div>
+            <div class="chart-x">
+              <span>Dec</span><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <h3>Activity</h3>
+            <span class="meta">Live</span>
+          </div>
+          <div class="card-b">
+            <div class="activity-item">
+              <div class="av ok">✓</div>
+              <div class="body">
+                <p><strong>PO-2026-04711</strong> approved by Finance for Bharat Steel Co.</p>
+                <span class="when">2 min ago · ₹ 14,82,500</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="av brand">RFQ</div>
+              <div class="body">
+                <p>8 new quotes received on <strong>Steel rods 304L</strong> RFQ.</p>
+                <span class="when">22 min ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="av warn">!</div>
+              <div class="body">
+                <p>Tata Components requires GSTIN re-verification before next order.</p>
+                <span class="when">1 hr ago</span>
+              </div>
+            </div>
+            <div class="activity-item">
+              <div class="av">VK</div>
+              <div class="body">
+                <p><strong>Vikram Kumar</strong> requested approval for PO-2026-04709.</p>
+                <span class="when">3 hr ago · ₹ 3,17,900</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px;">
+        <div class="card-h">
+          <h3>Recent purchase orders</h3>
+          <a href="#" data-go="orders" style="font: 500 12px/1 var(--font-sans); color: var(--kraya-red); text-decoration: none;">View all →</a>
+        </div>
+        <table>
+          <thead><tr>
+            <th>PO #</th><th>Vendor</th><th>Status</th><th>Owner</th><th class="num">Amount</th><th class="num">Quotes</th>
+          </tr></thead>
+          <tbody>
+            <tr><td>PO-2026-04711</td><td><div class="v-cell"><div class="av-sm">BS</div>Bharat Steel Co.</div></td><td><span class="badge b-success"><span class="b-dot"></span>Approved</span></td><td>Riya S.</td><td class="num">₹ 14,82,500</td><td class="num">8</td></tr>
+            <tr><td>PO-2026-04709</td><td><div class="v-cell"><div class="av-sm">ML</div>Mahindra Logistics</div></td><td><span class="badge b-warning"><span class="b-dot"></span>Pending</span></td><td>Vikram K.</td><td class="num">₹ 3,17,900</td><td class="num">4</td></tr>
+            <tr><td>PO-2026-04702</td><td><div class="v-cell"><div class="av-sm">TC</div>Tata Components</div></td><td><span class="badge b-info"><span class="b-dot"></span>In Review</span></td><td>Anita M.</td><td class="num">₹ 22,40,000</td><td class="num">11</td></tr>
+            <tr><td>PO-2026-04695</td><td><div class="v-cell"><div class="av-sm">LI</div>Larsen Industrial</div></td><td><span class="badge b-success"><span class="b-dot"></span>Approved</span></td><td>Riya S.</td><td class="num">₹ 1,08,200</td><td class="num">3</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── SCREEN: Orders ──────────────────────────────────── -->
+    <section class="screen" id="screen-orders">
+      <div class="pagehead">
+        <div><h1>Purchase orders</h1><p>42 active orders · 7 pending approval</p></div>
+        <div class="btns">
+          <button class="btn btn-outline">Filter</button>
+          <button class="btn btn-primary">+ Create PO</button>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">All <span style="color: var(--fg-3); margin-left: 4px;">42</span></div>
+        <div class="tab">Pending <span style="color: var(--fg-3); margin-left: 4px;">7</span></div>
+        <div class="tab">Approved <span style="color: var(--fg-3); margin-left: 4px;">28</span></div>
+        <div class="tab">In Review <span style="color: var(--fg-3); margin-left: 4px;">5</span></div>
+        <div class="tab">Closed <span style="color: var(--fg-3); margin-left: 4px;">142</span></div>
+      </div>
+
+      <div class="filterbar">
+        <button class="pill-btn active">All vendors</button>
+        <button class="pill-btn">Above ₹5L</button>
+        <button class="pill-btn">Steel &amp; metals</button>
+        <button class="pill-btn">+ Add filter</button>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead><tr>
+            <th style="width: 28px"><input type="checkbox" /></th>
+            <th>PO #</th><th>Vendor</th><th>Status</th><th>Created</th><th>Owner</th><th class="num">Amount</th><th class="num">Quotes</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04711</td><td><div class="v-cell"><div class="av-sm">BS</div>Bharat Steel Co.</div></td><td><span class="badge b-success"><span class="b-dot"></span>Approved</span></td><td>27 May 2026</td><td>Riya S.</td><td class="num">₹ 14,82,500</td><td class="num">8</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04709</td><td><div class="v-cell"><div class="av-sm">ML</div>Mahindra Logistics</div></td><td><span class="badge b-warning"><span class="b-dot"></span>Pending</span></td><td>27 May 2026</td><td>Vikram K.</td><td class="num">₹ 3,17,900</td><td class="num">4</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04702</td><td><div class="v-cell"><div class="av-sm">TC</div>Tata Components</div></td><td><span class="badge b-info"><span class="b-dot"></span>In Review</span></td><td>26 May 2026</td><td>Anita M.</td><td class="num">₹ 22,40,000</td><td class="num">11</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04695</td><td><div class="v-cell"><div class="av-sm">LI</div>Larsen Industrial</div></td><td><span class="badge b-success"><span class="b-dot"></span>Approved</span></td><td>25 May 2026</td><td>Riya S.</td><td class="num">₹ 1,08,200</td><td class="num">3</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04691</td><td><div class="v-cell"><div class="av-sm">GI</div>Godrej Industries</div></td><td><span class="badge b-danger"><span class="b-dot"></span>Rejected</span></td><td>24 May 2026</td><td>Anita M.</td><td class="num">₹ 8,90,000</td><td class="num">6</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04688</td><td><div class="v-cell"><div class="av-sm">RE</div>Reliance Engg.</div></td><td><span class="badge b-success"><span class="b-dot"></span>Approved</span></td><td>23 May 2026</td><td>Vikram K.</td><td class="num">₹ 5,42,300</td><td class="num">9</td></tr>
+            <tr><td><input type="checkbox" /></td><td>PO-2026-04683</td><td><div class="v-cell"><div class="av-sm">HE</div>Hindalco Extr.</div></td><td><span class="badge b-warning"><span class="b-dot"></span>Pending</span></td><td>22 May 2026</td><td>Riya S.</td><td class="num">₹ 11,75,000</td><td class="num">7</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ─── SCREEN: RFQ ─────────────────────────────────────── -->
+    <section class="screen" id="screen-rfq">
+      <div class="pagehead">
+        <div><h1>RFQs &amp; auctions</h1><p>8 active requests for quotation · 3 closing this week</p></div>
+        <div class="btns">
+          <button class="btn btn-outline">Import RFQ</button>
+          <button class="btn btn-primary">+ New RFQ</button>
+        </div>
+      </div>
+
+      <div class="grid-2" style="grid-template-columns: 1fr 1fr 1fr; gap: 16px;">
+        <div class="card">
+          <div class="card-b" style="padding: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <span class="badge b-brand">RFQ-2026-0418</span>
+              <span class="badge b-warning"><span class="b-dot"></span>Closes in 2d</span>
+            </div>
+            <h3 style="font: 600 17px/1.2 var(--font-sans); margin: 0 0 6px;">Steel rods · 304L</h3>
+            <p style="font: 400 13px/1.5 var(--font-sans); color: var(--fg-2); margin: 0 0 18px;">12,500 units · Mumbai delivery · Q3 dispatch</p>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;">
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">QUOTES</div><div style="font: 600 17px/1 var(--font-mono); color: var(--fg-1);">8</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">LOW BID</div><div style="font: 600 17px/1 var(--font-mono); color: var(--success);">₹ 14.8L</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">SAVINGS</div><div style="font: 600 17px/1 var(--font-mono); color: var(--success);">6.2%</div></div>
+            </div>
+            <div style="display: flex; gap: 8px;"><button class="btn btn-outline" style="flex:1">View quotes</button><button class="btn btn-primary" style="flex:1">Award</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-b" style="padding: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <span class="badge b-brand">RFQ-2026-0415</span>
+              <span class="badge b-info"><span class="b-dot"></span>Live · 6d left</span>
+            </div>
+            <h3 style="font: 600 17px/1.2 var(--font-sans); margin: 0 0 6px;">Industrial bearings</h3>
+            <p style="font: 400 13px/1.5 var(--font-sans); color: var(--fg-2); margin: 0 0 18px;">SKF 6205-2RS · 4,200 units · multi-location</p>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;">
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">QUOTES</div><div style="font: 600 17px/1 var(--font-mono); color: var(--fg-1);">4</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">LOW BID</div><div style="font: 600 17px/1 var(--font-mono); color: var(--fg-1);">₹ 6.1L</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">SAVINGS</div><div style="font: 600 17px/1 var(--font-mono); color: var(--fg-3);">—</div></div>
+            </div>
+            <div style="display: flex; gap: 8px;"><button class="btn btn-outline" style="flex:1">View quotes</button><button class="btn btn-primary" style="flex:1">Remind</button></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-b" style="padding: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <span class="badge b-brand">RFQ-2026-0412</span>
+              <span class="badge b-success"><span class="b-dot"></span>Awarded</span>
+            </div>
+            <h3 style="font: 600 17px/1.2 var(--font-sans); margin: 0 0 6px;">Hydraulic hoses</h3>
+            <p style="font: 400 13px/1.5 var(--font-sans); color: var(--fg-2); margin: 0 0 18px;">SAE-100R2 · 900 m · Reliance Engg.</p>
+            <div style="display: flex; gap: 12px; padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle); margin-bottom: 14px;">
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">QUOTES</div><div style="font: 600 17px/1 var(--font-mono); color: var(--fg-1);">9</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">AWARDED</div><div style="font: 600 17px/1 var(--font-mono); color: var(--success);">₹ 5.4L</div></div>
+              <div style="flex:1"><div style="font: 500 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 6px;">SAVED</div><div style="font: 600 17px/1 var(--font-mono); color: var(--success);">₹ 38K</div></div>
+            </div>
+            <div style="display: flex; gap: 8px;"><button class="btn btn-outline" style="flex:1">View PO</button></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── SCREEN: Vendors ─────────────────────────────────── -->
+    <section class="screen" id="screen-vendors">
+      <div class="pagehead">
+        <div><h1>Vendors</h1><p>156 active vendors · 12 awaiting compliance verification</p></div>
+        <div class="btns">
+          <button class="btn btn-outline">Import vendors</button>
+          <button class="btn btn-primary">+ Onboard vendor</button>
+        </div>
+      </div>
+
+      <div class="filterbar">
+        <button class="pill-btn active">All categories</button>
+        <button class="pill-btn">Verified</button>
+        <button class="pill-btn">Top 20 by spend</button>
+        <button class="pill-btn">Mumbai region</button>
+      </div>
+
+      <div class="vendor-grid">
+        <div class="vendor-card">
+          <div class="head"><div class="logo">BS</div><div><h4>Bharat Steel Co.</h4><div class="sub">GSTIN 27AAA…782J · Mumbai</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 1.2 Cr</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">98%</div></div>
+            <div><div class="lbl">Score</div><div class="val">A+</div></div>
+          </div>
+          <div class="tags"><span class="badge b-success"><span class="b-dot"></span>Verified</span><span class="badge b-neutral">Steel</span><span class="badge b-neutral">Metals</span></div>
+        </div>
+        <div class="vendor-card">
+          <div class="head"><div class="logo">ML</div><div><h4>Mahindra Logistics</h4><div class="sub">GSTIN 27BBB…102K · Pune</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 84 L</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">92%</div></div>
+            <div><div class="lbl">Score</div><div class="val">A</div></div>
+          </div>
+          <div class="tags"><span class="badge b-success"><span class="b-dot"></span>Verified</span><span class="badge b-neutral">Logistics</span></div>
+        </div>
+        <div class="vendor-card">
+          <div class="head"><div class="logo">TC</div><div><h4>Tata Components</h4><div class="sub">GSTIN 27CCC…921L · Jamshedpur</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 2.4 Cr</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">95%</div></div>
+            <div><div class="lbl">Score</div><div class="val">A+</div></div>
+          </div>
+          <div class="tags"><span class="badge b-warning"><span class="b-dot"></span>Re-verify</span><span class="badge b-neutral">Components</span></div>
+        </div>
+        <div class="vendor-card">
+          <div class="head"><div class="logo">LI</div><div><h4>Larsen Industrial</h4><div class="sub">GSTIN 27DDD…445M · Mumbai</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 32 L</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">88%</div></div>
+            <div><div class="lbl">Score</div><div class="val">B+</div></div>
+          </div>
+          <div class="tags"><span class="badge b-success"><span class="b-dot"></span>Verified</span><span class="badge b-neutral">Industrial</span></div>
+        </div>
+        <div class="vendor-card">
+          <div class="head"><div class="logo">GI</div><div><h4>Godrej Industries</h4><div class="sub">GSTIN 27EEE…109N · Mumbai</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 56 L</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">90%</div></div>
+            <div><div class="lbl">Score</div><div class="val">A</div></div>
+          </div>
+          <div class="tags"><span class="badge b-success"><span class="b-dot"></span>Verified</span><span class="badge b-neutral">Chemicals</span></div>
+        </div>
+        <div class="vendor-card">
+          <div class="head"><div class="logo">RE</div><div><h4>Reliance Engg.</h4><div class="sub">GSTIN 27FFF…220P · Hazira</div></div></div>
+          <div class="stats-row">
+            <div><div class="lbl">Spend YTD</div><div class="val">₹ 98 L</div></div>
+            <div><div class="lbl">On-time %</div><div class="val">94%</div></div>
+            <div><div class="lbl">Score</div><div class="val">A</div></div>
+          </div>
+          <div class="tags"><span class="badge b-success"><span class="b-dot"></span>Verified</span><span class="badge b-neutral">Engineering</span></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Sidebar nav: switch screens
+  const navItems = document.querySelectorAll(".nav-item[data-screen]");
+  const screens = document.querySelectorAll(".screen");
+  function show(name) {
+    screens.forEach(s => s.classList.toggle("active", s.id === "screen-" + name));
+    navItems.forEach(n => n.classList.toggle("active", n.dataset.screen === name));
+    document.querySelector(".canvas").scrollTop = 0;
+  }
+  navItems.forEach(n => n.addEventListener("click", () => show(n.dataset.screen)));
+  document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", (e) => { e.preventDefault(); show(el.dataset.go); }));
+</script>
+
+</body>
+</html>

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Kraya · Accounts Payable — Screens</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="ext-resource-dependency" content="assets/kraya-logo-black.png" data-resource-id="logo" />
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #f0eee9; font-family: var(--font-sans); }
+  #root { width: 100%; height: 100%; }
+  .ka-artboard-host { width: 100%; height: 100%; overflow: hidden; background: var(--kraya-paper); }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <template id="__bundler_thumbnail" data-bg-color="#1a1411">
+    <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+      <rect width="1200" height="800" fill="#1a1411"/>
+      <g transform="translate(420,250)">
+        <rect x="0" y="0" width="220" height="300" rx="14" fill="#f0eee9"/>
+        <rect x="28" y="40" width="120" height="18" rx="5" fill="#d8261c"/>
+        <rect x="28" y="84" width="164" height="10" rx="4" fill="#c9c2b6"/>
+        <rect x="28" y="108" width="140" height="10" rx="4" fill="#c9c2b6"/>
+        <rect x="28" y="132" width="164" height="10" rx="4" fill="#c9c2b6"/>
+        <rect x="28" y="178" width="164" height="10" rx="4" fill="#c9c2b6"/>
+        <rect x="28" y="202" width="100" height="10" rx="4" fill="#c9c2b6"/>
+        <rect x="28" y="250" width="164" height="22" rx="6" fill="#1a1411"/>
+        <circle cx="300" cy="150" r="34" fill="none" stroke="#d8261c" stroke-width="10"/>
+        <path d="M286 150 l10 10 l20 -22" fill="none" stroke="#d8261c" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+      </g>
+      <text x="600" y="640" font-family="Georgia, serif" font-size="46" font-weight="700" fill="#f0eee9" text-anchor="middle">kraya</text>
+      <text x="600" y="684" font-family="monospace" font-size="22" fill="#8a8076" text-anchor="middle">Accounts Payable</text>
+    </svg>
+  </template>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <script type="text/babel" src="design-canvas.jsx"></script>
+  <script type="text/babel" src="tweaks-panel.jsx"></script>
+  <script type="text/babel" src="shell.jsx"></script>
+  <script type="text/babel" src="screens-inbox.jsx"></script>
+  <script type="text/babel" src="screens-match.jsx"></script>
+  <script type="text/babel" src="screens-payable.jsx"></script>
+
+  <script type="text/babel">
+    const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+      "fidelity": "hi-fi"
+    }/*EDITMODE-END*/;
+
+    const APP_W = 1440;
+    const APP_TALL = 1180;
+    const APP_REG  = 980;
+
+    function App() {
+      useTweaks(TWEAK_DEFAULTS);
+
+      return (
+        <>
+          <DesignCanvas>
+            <DCSection
+              id="ingest"
+              title="01 · Ingestion — capture every invoice"
+              subtitle="Two paths in: GST e-invoice API (auto, default) and OCR upload (fallback when vendor doesn't share OTP). The dashboard sits across both.">
+              <DCArtboard id="ap-dashboard" label="Dashboard — AP overview" width={APP_W} height={1080}>
+                <div className="ka-artboard-host"><ScreenDashboard/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-inbox" label="E-invoice inbox" width={APP_W} height={APP_REG}>
+                <div className="ka-artboard-host"><ScreenInbox/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-ocr" label="OCR upload &amp; field review" width={APP_W} height={1300}>
+                <div className="ka-artboard-host"><ScreenOCR/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-sources" label="GST API sources — per GSTIN" width={APP_W} height={APP_REG}>
+                <div className="ka-artboard-host"><ScreenSources/></div>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection
+              id="match"
+              title="02 · Match — invoice → PO → GRN"
+              subtitle="The verification core. Open invoice, line-link to open POs, then verify three-ways against stores' GRN. Diffs are flagged for purchase / accounts review.">
+              <DCArtboard id="ap-invoice" label="Invoice detail — parsed e-invoice" width={APP_W} height={APP_REG}>
+                <div className="ka-artboard-host"><ScreenInvoiceDetail/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-po-match" label="PO ↔ Invoice match — side-by-side" width={APP_W} height={1100}>
+                <div className="ka-artboard-host"><ScreenPOMatch/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-3way" label="3-way match — PO + Invoice + GRN" width={APP_W} height={1280}>
+                <div className="ka-artboard-host"><Screen3Way/></div>
+              </DCArtboard>
+            </DCSection>
+
+            <DCSection
+              id="payables"
+              title="03 · Payables &amp; logistics"
+              subtitle="Stores team posts GRN against the e-way bill; accounts releases payable; purchase tracks consignments in flight.">
+              <DCArtboard id="ap-grn" label="GRN — stores receiving" width={APP_W} height={APP_REG}>
+                <div className="ka-artboard-host"><ScreenGRN/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-register" label="AP register — ready to pay" width={APP_W} height={1160}>
+                <div className="ka-artboard-host"><ScreenRegister/></div>
+              </DCArtboard>
+              <DCArtboard id="ap-eway" label="E-way bill tracker" width={APP_W} height={APP_REG}>
+                <div className="ka-artboard-host"><ScreenEway/></div>
+              </DCArtboard>
+            </DCSection>
+          </DesignCanvas>
+
+          <TweaksPanel defaults={TWEAK_DEFAULTS} title="Tweaks">
+            <TweakSection title="About this canvas">
+              <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: 0 }}>
+                10 screens across the full Kraya AP flow: e-invoice ingestion (GST API + OCR fallback),
+                line-item matching against open POs, 3-way verification with GRN, AP register, and
+                e-way bill tracking.
+              </p>
+              <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: "10px 0 0" }}>
+                Drag artboards to reorder. Click expand (↗) on any artboard to view it fullscreen.
+                Once you sign off on a screen, that's the spec for the working build.
+              </p>
+            </TweakSection>
+            <TweakSection title="Roles modeled">
+              <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: 0 }}>
+                <b>Stores</b> — receive material against POs, raise GRN.<br/>
+                <b>Purchase</b> — link e-invoice lines to open POs, track e-way bills.<br/>
+                <b>Accounts</b> — compliance check, 3-way verify, schedule payment runs.
+              </p>
+            </TweakSection>
+          </TweaksPanel>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>

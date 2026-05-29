@@ -1,0 +1,56 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans); }
+  .panel { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 6px;}
+  .head { padding: 12px 14px 8px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); margin-bottom: 4px;}
+  .head h4 { font: 600 13px/1 var(--font-sans); margin: 0;}
+  .head .live { display: inline-flex; align-items: center; gap: 6px; font: 600 10px/1 var(--font-sans); letter-spacing: 0.08em; color: var(--auction-live);}
+
+  .tick { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 6px;}
+  .tick:hover { background: var(--bg-canvas);}
+  .when { font: 500 10px/1 var(--font-mono); color: var(--fg-3); width: 48px;}
+  .who { font: 500 13px/1.3 var(--font-sans); color: var(--fg-1);}
+  .who .ev { color: var(--fg-2); font-weight: 400;}
+  .price { font: 600 13px/1 var(--font-mono); color: var(--fg-1); font-variant-numeric: tabular-nums;}
+  .tick.bid .price { color: var(--success);}
+  .tick.ext .who .ev { color: var(--auction-extended); }
+  .tick.bid .when, .tick.bid .who { animation: kx-fade-in 0.4s var(--ease-out);}
+  @keyframes kx-fade-in { from { opacity: 0; transform: translateY(-2px);} to { opacity: 1; transform: none;} }
+</style>
+</head><body>
+  <div class="panel">
+    <div class="head">
+      <h4>Live ticker</h4>
+      <span class="live"><span class="kx-live-dot"></span>LIVE</span>
+    </div>
+    <div class="tick bid">
+      <span class="when">14s</span>
+      <span class="who"><strong>Bharat Steel</strong> <span class="ev">placed bid</span></span>
+      <span class="price">₹ 14,68,500 ↓</span>
+    </div>
+    <div class="tick bid">
+      <span class="when">38s</span>
+      <span class="who"><strong>You</strong> <span class="ev">placed bid</span></span>
+      <span class="price">₹ 14,74,200 ↓</span>
+    </div>
+    <div class="tick ext">
+      <span class="when">2m</span>
+      <span class="who"><span class="ev">Auction extended +2 min · bid in final 60s</span></span>
+      <span class="price" style="color: var(--auction-extended);">+02:00</span>
+    </div>
+    <div class="tick bid">
+      <span class="when">3m</span>
+      <span class="who"><strong>Reliance Engg.</strong> <span class="ev">placed bid</span></span>
+      <span class="price">₹ 14,82,500 ↓</span>
+    </div>
+    <div class="tick">
+      <span class="when">6m</span>
+      <span class="who"><span class="ev">Auction opened · starting price</span></span>
+      <span class="price" style="color: var(--fg-3);">₹ 15,80,000</span>
+    </div>
+  </div>
+</body></html>

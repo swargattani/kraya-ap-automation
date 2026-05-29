@@ -1,0 +1,277 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Kraya — Buyer-Seller Meets · module styles
+   Layered on top of colors_and_type.css. Reuses buyer/vendor/marketing
+   vocab: warm paper canvas, white cards, hairline borders, soft shadows.
+   ────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --meet-confirmed:    #2E7D5B;
+  --meet-confirmed-bg: #E4F1EA;
+  --meet-pending:      #B5731A;
+  --meet-pending-bg:   #FAEFD9;
+  --meet-live:         #D8261C;
+  --meet-live-bg:      #FBE9E7;
+  --meet-closed:       #5F544D;
+  --meet-closed-bg:    #F0EAE0;
+}
+
+/* ── Reset within artboards ───────────────────────────────────────────── */
+.km, .km * { box-sizing: border-box; }
+.km { font-family: var(--font-sans); color: var(--fg-1); background: var(--kraya-paper); font-size: 14px;
+      width: 100%; height: 100%; overflow: hidden; position: relative; }
+
+/* ── Shared chrome ────────────────────────────────────────────────────── */
+
+/* Marketing nav */
+.km-mk-nav { position: sticky; top: 0; z-index: 20; backdrop-filter: blur(12px);
+  background: rgba(250, 247, 242, 0.85); border-bottom: 1px solid var(--border-subtle); }
+.km-mk-nav-inner { max-width: 1280px; margin: 0 auto; padding: 0 40px;
+  display: flex; align-items: center; gap: 36px; height: 72px; }
+.km-mk-logo img { height: 26px; display: block; }
+.km-mk-links { display: flex; gap: 28px; }
+.km-mk-links a { color: var(--fg-1); text-decoration: none; font: 500 14px/1 var(--font-sans);
+  padding: 6px 0; border-bottom: 2px solid transparent; }
+.km-mk-links a.active { color: var(--kraya-red); border-bottom-color: var(--kraya-red); }
+.km-mk-cta { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+
+/* App shell (buyer / vendor / admin) */
+.km-app { display: grid; grid-template-columns: 240px 1fr; grid-template-rows: 56px 1fr;
+  height: 100%; min-height: 100%; }
+.km-topbar { grid-column: 1 / -1; display: flex; align-items: center;
+  background: var(--bg-surface); border-bottom: 1px solid var(--border-subtle);
+  padding: 0 20px; gap: 18px; }
+.km-topbar img.logo { height: 22px; display: block; }
+.km-topbar .role-tag { background: var(--kraya-red-soft); color: var(--kraya-red);
+  padding: 4px 10px; border-radius: 999px; font: 600 11px/1 var(--font-sans);
+  letter-spacing: 0.04em; text-transform: uppercase; }
+.km-topbar .role-tag.buyer { background: var(--info-soft); color: var(--info); }
+.km-topbar .role-tag.admin { background: var(--kraya-ink); color: white; }
+.km-topbar .right { margin-left: auto; display: flex; align-items: center; gap: 14px; }
+.km-topbar .business { display: flex; flex-direction: column; align-items: flex-end; }
+.km-topbar .business .n { font: 600 13px/1 var(--font-sans); color: var(--fg-1); }
+.km-topbar .business .s { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 3px; }
+.km-topbar .avatar { width: 32px; height: 32px; border-radius: 999px;
+  background: var(--neutral-200); color: var(--fg-2); display: grid; place-items: center;
+  font: 600 12px/1 var(--font-sans); }
+.km-topbar .search { flex: 1; max-width: 420px; position: relative; }
+.km-topbar .search input { width: 100%; padding: 8px 12px 8px 36px;
+  border: 1px solid var(--border-default); border-radius: 8px; background: var(--bg-canvas);
+  font: 400 13px/1 var(--font-sans); color: var(--fg-1); outline: none; }
+.km-topbar .search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--fg-3); }
+
+.km-sidebar { background: var(--bg-surface); border-right: 1px solid var(--border-subtle);
+  padding: 16px 8px; overflow-y: auto; }
+.km-nav-sec { font: 600 10px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--fg-3); padding: 14px 12px 8px; }
+.km-nav-item { display: flex; align-items: center; gap: 12px; padding: 9px 12px;
+  border-radius: 6px; font: 500 13px/1 var(--font-sans); color: var(--fg-1);
+  cursor: pointer; user-select: none; }
+.km-nav-item:hover { background: var(--bg-subtle); }
+.km-nav-item.active { background: var(--kraya-red-soft); color: var(--kraya-red); font-weight: 600; }
+.km-nav-item .ico { width: 18px; height: 18px; color: var(--fg-3); flex-shrink: 0; }
+.km-nav-item.active .ico { color: var(--kraya-red); }
+.km-nav-item .badge { margin-left: auto; font: 600 10px/1 var(--font-mono);
+  background: var(--bg-canvas); color: var(--fg-2); padding: 3px 6px; border-radius: 999px;
+  border: 1px solid var(--border-subtle); }
+.km-nav-item.active .badge { background: white; color: var(--kraya-red); border-color: var(--kraya-red-tint); }
+
+.km-canvas { overflow-y: auto; padding: 28px 32px 64px; }
+
+/* ── Page head ───────────────────────────────────────────────────────── */
+.km-pagehead { display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px; gap: 24px; }
+.km-pagehead h1 { font: 700 28px/1.1 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 4px; }
+.km-pagehead p { font: 400 13px/1.4 var(--font-sans); color: var(--fg-2); margin: 0; }
+.km-pagehead .btns { display: flex; gap: 8px; flex-shrink: 0; }
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.km-btn { font: 600 13px/1 var(--font-sans); border-radius: 8px; padding: 9px 14px;
+  cursor: pointer; border: 1px solid transparent; display: inline-flex; align-items: center;
+  gap: 6px; text-decoration: none; transition: background 150ms, box-shadow 150ms; }
+.km-btn-primary { background: var(--kraya-red); color: white; box-shadow: var(--shadow-1); }
+.km-btn-primary:hover { background: var(--kraya-red-hover); box-shadow: var(--shadow-2); }
+.km-btn-outline { background: var(--bg-surface); color: var(--fg-1); border-color: var(--border-default); }
+.km-btn-outline:hover { background: var(--bg-subtle); }
+.km-btn-ghost { background: transparent; color: var(--fg-1); }
+.km-btn-ghost:hover { background: var(--bg-subtle); }
+.km-btn-dark { background: var(--kraya-ink); color: white; }
+.km-btn-dark:hover { background: var(--kraya-ink-2); }
+.km-btn-lg { padding: 12px 20px; font-size: 14px; }
+.km-btn-sm { padding: 6px 10px; font-size: 12px; }
+.km-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ── Badges ──────────────────────────────────────────────────────────── */
+.km-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px;
+  border-radius: 999px; font: 600 11px/1.2 var(--font-sans); }
+.km-badge .dot { width: 5px; height: 5px; border-radius: 999px; background: currentColor; }
+.km-b-success { background: var(--success-soft); color: var(--success); }
+.km-b-warning { background: var(--warning-soft); color: var(--warning); }
+.km-b-danger  { background: var(--danger-soft);  color: var(--danger); }
+.km-b-info    { background: var(--info-soft);    color: var(--info); }
+.km-b-neutral { background: var(--neutral-100);  color: var(--neutral-700); }
+.km-b-brand   { background: var(--kraya-red-soft); color: var(--kraya-red); }
+.km-b-live    { background: var(--meet-live-bg); color: var(--meet-live); }
+.km-b-confirmed { background: var(--meet-confirmed-bg); color: var(--meet-confirmed); }
+
+/* ── Card ────────────────────────────────────────────────────────────── */
+.km-card { background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 12px; box-shadow: var(--shadow-1); overflow: hidden; }
+.km-card-h { display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px; border-bottom: 1px solid var(--border-subtle); }
+.km-card-h h3 { font: 600 14px/1 var(--font-sans); margin: 0; }
+.km-card-h .meta { font: 400 12px/1 var(--font-sans); color: var(--fg-3); }
+.km-card-b { padding: 16px 20px; }
+
+/* ── Tabs ────────────────────────────────────────────────────────────── */
+.km-tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 20px; }
+.km-tab { padding: 10px 14px; font: 500 13px/1 var(--font-sans); color: var(--fg-2);
+  cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.km-tab:hover { color: var(--fg-1); }
+.km-tab.active { color: var(--kraya-red); border-bottom-color: var(--kraya-red); font-weight: 600; }
+.km-tab .ct { color: var(--fg-3); margin-left: 4px; font-weight: 500; }
+.km-tab.active .ct { color: var(--kraya-red); }
+
+/* ── Pill filters ────────────────────────────────────────────────────── */
+.km-pill { padding: 7px 12px; border-radius: 999px; background: var(--bg-surface);
+  border: 1px solid var(--border-default); font: 500 12px/1 var(--font-sans);
+  color: var(--fg-1); cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.km-pill:hover { background: var(--bg-subtle); }
+.km-pill.active { background: var(--kraya-ink); color: white; border-color: var(--kraya-ink); }
+
+/* ── Inputs ──────────────────────────────────────────────────────────── */
+.km-field { margin-bottom: 16px; }
+.km-field label { display: block; font: 500 12px/1 var(--font-sans); color: var(--fg-2);
+  margin-bottom: 6px; }
+.km-field input, .km-field select, .km-field textarea {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border-default);
+  border-radius: 6px; font: 400 14px/1.3 var(--font-sans); color: var(--fg-1);
+  background: var(--bg-surface); outline: none; }
+.km-field input:focus, .km-field select:focus, .km-field textarea:focus {
+  border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft); }
+.km-field .helper { font: 400 11px/1.4 var(--font-sans); color: var(--fg-3); margin-top: 6px; }
+.km-field .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* ── Meet-specific: vendor booth tile ────────────────────────────────── */
+.km-vendor-tile { background: var(--bg-surface); border: 1px solid var(--border-subtle);
+  border-radius: 10px; padding: 14px; transition: box-shadow 200ms, transform 200ms; cursor: pointer; }
+.km-vendor-tile:hover { box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.km-vendor-tile .head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.km-vendor-tile .logo { width: 36px; height: 36px; border-radius: 8px;
+  background: var(--neutral-100); display: grid; place-items: center;
+  font: 700 12px/1 var(--font-sans); color: var(--fg-2); flex-shrink: 0; }
+.km-vendor-tile h4 { font: 600 13px/1.2 var(--font-sans); margin: 0; }
+.km-vendor-tile .sub { font: 400 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 3px; }
+.km-vendor-tile .tags { display: flex; gap: 4px; flex-wrap: wrap; }
+
+/* ── Hero/banner: dot grid bg ────────────────────────────────────────── */
+.km-dotgrid { position: relative; }
+.km-dotgrid::before { content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, rgba(15,12,10,0.08) 1px, transparent 0);
+  background-size: 16px 16px; opacity: 0.7; pointer-events: none;
+  mask-image: linear-gradient(to bottom, black 30%, transparent 95%); }
+
+/* ── Live indicator ──────────────────────────────────────────────────── */
+.km-live-dot { width: 8px; height: 8px; border-radius: 999px;
+  background: var(--meet-live); box-shadow: 0 0 0 0 var(--meet-live);
+  animation: km-pulse 1.6s ease-out infinite; flex-shrink: 0; display: inline-block; }
+@keyframes km-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(216, 38, 28, 0.5); }
+  100% { box-shadow: 0 0 0 8px rgba(216, 38, 28, 0); }
+}
+
+/* ── Eyebrow ─────────────────────────────────────────────────────────── */
+.km-eyebrow { font: 600 11px/1 var(--font-sans); letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--kraya-red); display: inline-flex;
+  align-items: center; gap: 8px; }
+.km-eyebrow::before { content: ""; width: 18px; height: 1px; background: var(--kraya-red); }
+.km-eyebrow.dark { color: rgba(255, 255, 255, 0.8); }
+.km-eyebrow.dark::before { background: rgba(255, 255, 255, 0.4); }
+
+/* ── Placeholder strip art (no AI illustration) ──────────────────────── */
+.km-placeholder { background: repeating-linear-gradient(45deg,
+  var(--neutral-100) 0 12px, var(--bg-surface) 12px 24px);
+  border: 1px dashed var(--border-default); border-radius: 12px;
+  display: grid; place-items: center; color: var(--fg-3);
+  font: 500 12px/1.4 var(--font-mono); text-align: center; padding: 16px; }
+
+/* ── Modal scrim & body ──────────────────────────────────────────────── */
+.km-scrim { position: absolute; inset: 0; background: rgba(15, 12, 10, 0.55);
+  z-index: 100; display: grid; place-items: center; padding: 40px; }
+.km-modal { background: var(--bg-surface); border-radius: 16px;
+  box-shadow: var(--shadow-4); max-width: 540px; width: 100%; overflow: hidden; }
+.km-modal-h { padding: 22px 24px 18px; border-bottom: 1px solid var(--border-subtle); }
+.km-modal-h h2 { font: 700 22px/1.15 var(--font-sans); letter-spacing: -0.02em; margin: 0 0 6px; }
+.km-modal-h p  { font: 400 13px/1.5 var(--font-sans); color: var(--fg-2); margin: 0; }
+.km-modal-b { padding: 22px 24px; }
+.km-modal-f { padding: 16px 24px; border-top: 1px solid var(--border-subtle);
+  background: var(--bg-canvas); display: flex; justify-content: flex-end; gap: 8px; }
+
+/* ── Phone frame (for mobile artboards) ──────────────────────────────── */
+.km-phone { width: 100%; height: 100%; background: var(--kraya-ink);
+  display: flex; flex-direction: column; }
+.km-phone .status { height: 38px; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between;
+  color: white; font: 600 14px/1 var(--font-sans); }
+.km-phone .body { flex: 1; background: var(--kraya-paper); overflow-y: auto;
+  position: relative; }
+.km-phone .nav-bar { height: 56px; background: var(--bg-surface);
+  border-top: 1px solid var(--border-subtle); display: flex;
+  align-items: center; justify-content: space-around; padding: 0 10px; }
+.km-phone .nav-bar .item { display: flex; flex-direction: column; align-items: center;
+  gap: 3px; color: var(--fg-3); font: 600 10px/1 var(--font-sans); }
+.km-phone .nav-bar .item.active { color: var(--kraya-red); }
+
+/* ── Mono num helper ─────────────────────────────────────────────────── */
+.km-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+
+/* ── Subtle divider ─────────────────────────────────────────────────── */
+.km-div { height: 1px; background: var(--border-subtle); margin: 16px 0; }
+
+/* ── Big-screen (in-room display) tokens ─────────────────────────────── */
+.km-bigscreen {
+  width: 100%; height: 100%; background: #0a0a0a; color: white;
+  font-family: var(--font-sans);
+  display: grid; grid-template-rows: 88px 1fr 96px;
+  position: relative; overflow: hidden;
+}
+.km-bigscreen .head { display: flex; align-items: center; padding: 0 48px; gap: 24px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.km-bigscreen .head .logo { height: 28px; filter: invert(1) brightness(2); }
+.km-bigscreen .head .liveband { display: flex; align-items: center; gap: 10px; font: 600 12px/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase; color: #ff5a4d; }
+.km-bigscreen .head .time { margin-left: auto; font: 500 14px/1 var(--font-mono); color: rgba(255,255,255,0.5); }
+.km-bigscreen .ticker { background: #0a0a0a; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; overflow: hidden; }
+.km-bigscreen .ticker-track { display: inline-flex; gap: 56px; padding-left: 48px; animation: km-marquee 38s linear infinite; white-space: nowrap; }
+.km-bigscreen .ticker-track .item { display: inline-flex; align-items: center; gap: 14px; font: 500 18px/1 var(--font-sans); color: rgba(255,255,255,0.85); }
+.km-bigscreen .ticker-track .sep { color: rgba(255,255,255,0.2); font-family: var(--font-mono); }
+@keyframes km-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* ── Mobile shell ────────────────────────────────────────────────────── */
+.km-mobile { width: 100%; height: 100%; background: var(--kraya-paper); display: flex; flex-direction: column; }
+.km-mobile .m-status { height: 38px; padding: 0 22px; display: flex; align-items: center; justify-content: space-between; color: var(--fg-1); font: 600 14px/1 var(--font-sans); flex-shrink: 0; }
+.km-mobile .m-body { flex: 1; overflow-y: auto; position: relative; }
+.km-mobile .m-nav  { height: 64px; background: var(--bg-surface); border-top: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-around; padding: 0 8px; flex-shrink: 0; }
+.km-mobile .m-nav .item { display: flex; flex-direction: column; gap: 3px; align-items: center; color: var(--fg-3); font: 600 10px/1 var(--font-sans); padding: 8px 0; }
+.km-mobile .m-nav .item.active { color: var(--kraya-red); }
+.km-mobile .m-event-banner { display: flex; align-items: center; gap: 10px; padding: 10px 16px; background: var(--kraya-ink); color: white; flex-shrink: 0; }
+.km-mobile .m-event-banner .live { width: 8px; height: 8px; background: #ff5a4d; border-radius: 999px; box-shadow: 0 0 0 0 #ff5a4d; animation: km-pulse 1.6s ease-out infinite; }
+
+/* ── Live deal card (used in vendor + admin contexts) ────────────────── */
+.km-deal { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 10px; overflow: hidden; transition: box-shadow 200ms; }
+.km-deal:hover { box-shadow: var(--shadow-2); }
+.km-deal .top { padding: 14px; display: flex; gap: 12px; align-items: flex-start; }
+.km-deal .img { width: 56px; height: 56px; border-radius: 8px; background: var(--neutral-100); display: grid; place-items: center; flex-shrink: 0; color: var(--fg-3); }
+.km-deal .name { font: 600 14px/1.25 var(--font-sans); margin: 0 0 4px; }
+.km-deal .meta { font: 400 11px/1.2 var(--font-mono); color: var(--fg-3); }
+.km-deal .pricing { display: flex; align-items: baseline; gap: 10px; padding: 0 14px 14px; }
+.km-deal .pricing .regular { font: 400 12px/1 var(--font-mono); color: var(--fg-3); text-decoration: line-through; }
+.km-deal .pricing .special { font: 700 18px/1 var(--font-sans); color: var(--kraya-red); }
+.km-deal .pricing .save    { margin-left: auto; font: 600 10px/1 var(--font-mono); color: var(--meet-confirmed); padding: 4px 8px; background: var(--meet-confirmed-bg); border-radius: 999px; }
+
+/* ── Avatar group ───────────────────────────────────────────────────── */
+.km-avg { display: inline-flex; }
+.km-avg .av { width: 26px; height: 26px; border-radius: 999px; background: var(--neutral-200);
+  color: var(--fg-2); display: grid; place-items: center; font: 600 10px/1 var(--font-sans);
+  border: 2px solid var(--bg-surface); margin-left: -8px; }
+.km-avg .av:first-child { margin-left: 0; }
+.km-avg .more { background: var(--bg-canvas); color: var(--fg-2); font-weight: 600; }

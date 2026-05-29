@@ -1,0 +1,46 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 18px; align-items: center;}
+  .lbl { font: 500 11px/1 var(--font-mono); color: var(--fg-3); text-align: center; margin-top: -4px;}
+  .row { display: flex; justify-content: center; }
+
+  /* button base */
+  .btn { font: 600 14px/1 var(--font-sans); border-radius: 8px; padding: 11px 18px; cursor: pointer;
+         border: 1px solid transparent; display: inline-flex; align-items: center; gap: 8px;
+         transition: background var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out);}
+  .btn-primary { background: var(--kraya-red); color: #fff; box-shadow: var(--shadow-1);}
+  .btn-primary.hover { background: var(--kraya-red-hover); box-shadow: var(--shadow-2);}
+  .btn-primary.press { background: var(--kraya-red-press); box-shadow: none;}
+  .btn-secondary { background: transparent; color: var(--fg-1); border-color: var(--border-default);}
+  .btn-secondary.hover { background: var(--bg-subtle);}
+  .btn-ghost { background: transparent; color: var(--fg-1); }
+  .btn-ghost.hover { background: var(--bg-subtle);}
+  .btn-disabled { background: var(--neutral-200); color: var(--neutral-400); cursor: not-allowed;}
+</style>
+</head><body>
+  <div class="grid">
+    <div class="row"><button class="btn btn-primary">Get Started</button></div>
+    <div class="row"><button class="btn btn-primary hover">Get Started</button></div>
+    <div class="row"><button class="btn btn-primary press">Get Started</button></div>
+    <div class="row"><button class="btn btn-disabled">Get Started</button></div>
+
+    <div class="lbl">primary · default</div>
+    <div class="lbl">primary · hover</div>
+    <div class="lbl">primary · press</div>
+    <div class="lbl">primary · disabled</div>
+
+    <div class="row"><button class="btn btn-secondary">Read More</button></div>
+    <div class="row"><button class="btn btn-secondary hover">Read More</button></div>
+    <div class="row"><button class="btn btn-ghost">Skip</button></div>
+    <div class="row"><button class="btn btn-ghost hover">Skip</button></div>
+
+    <div class="lbl">secondary</div>
+    <div class="lbl">secondary · hover</div>
+    <div class="lbl">ghost</div>
+    <div class="lbl">ghost · hover</div>
+  </div>
+</body></html>

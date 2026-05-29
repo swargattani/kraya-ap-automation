@@ -1,0 +1,65 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 18px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px;}
+  .card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 18px;
+          box-shadow: var(--shadow-1); display: flex; flex-direction: column; gap: 14px; position: relative;}
+  .top { display: flex; justify-content: space-between; align-items: flex-start;}
+  .top .id { font: 500 11px/1 var(--font-mono); color: var(--fg-3); margin-bottom: 6px;}
+  .top h4 { font: 600 15px/1.25 var(--font-sans); margin: 0; }
+  .top .sub { font: 400 12px/1.4 var(--font-sans); color: var(--fg-2); margin-top: 3px;}
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px; border-radius: 999px;
+           font: 600 11px/1.2 var(--font-sans);}
+  .badge.live { background: var(--auction-live-soft); color: var(--auction-live); }
+
+  .stats { display: flex; gap: 18px; padding: 12px 0; border-top: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);}
+  .stats > div { flex: 1;}
+  .stats .l { font: 600 10px/1 var(--font-sans); letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-3); margin-bottom: 5px;}
+  .stats .v { font: 700 17px/1 var(--font-sans); color: var(--fg-1); font-feature-settings: "tnum"; font-variant-numeric: tabular-nums;}
+  .stats .v.mono { font-family: var(--font-mono); font-size: 16px;}
+
+  .foot { display: flex; align-items: center; justify-content: space-between; }
+  .foot .timer { font: 600 13px/1 var(--font-mono); color: var(--fg-1); }
+  .foot .btn { background: var(--kraya-red); color: white; border: none; padding: 8px 14px; border-radius: 8px; font: 600 12px/1 var(--font-sans); cursor: pointer;}
+  .foot .btn:hover { background: var(--kraya-red-hover);}
+</style>
+</head><body>
+  <div class="grid">
+    <div class="card">
+      <div class="top">
+        <div><div class="id">RFQ-2026-0418</div><h4>Steel rods · 304L</h4><div class="sub">12,500 units · Mumbai · 8 vendors</div></div>
+        <span class="badge live"><span class="kx-live-dot"></span>LIVE</span>
+      </div>
+      <div class="stats">
+        <div><div class="l">LEAD BID</div><div class="v mono">₹ 14.68 L</div></div>
+        <div><div class="l">SAVINGS</div><div class="v" style="color: var(--success)">−7.1%</div></div>
+        <div><div class="l">BIDS</div><div class="v">23</div></div>
+      </div>
+      <div class="foot">
+        <span class="timer">⏱ 02:48 left</span>
+        <button class="btn">Monitor live →</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="top">
+        <div><div class="id">RFQ-2026-0421</div><h4>Industrial bearings · SKF</h4><div class="sub">4,200 units · multi-site · 5 vendors</div></div>
+        <span class="badge" style="background: var(--info-soft); color: var(--info);"><span style="width:6px;height:6px;border-radius:99px;background:currentColor;"></span>Opens in 12h</span>
+      </div>
+      <div class="stats">
+        <div><div class="l">START PRICE</div><div class="v mono">₹ 6.50 L</div></div>
+        <div><div class="l">MIN DECREMENT</div><div class="v mono">₹ 500</div></div>
+        <div><div class="l">DURATION</div><div class="v">45 min</div></div>
+      </div>
+      <div class="foot">
+        <span class="timer" style="color: var(--fg-2);">⏱ Opens 28 May 14:00 IST</span>
+        <button class="btn" style="background: var(--bg-canvas); color: var(--fg-1); border: 1px solid var(--border-default);">Edit setup</button>
+      </div>
+    </div>
+  </div>
+</body></html>

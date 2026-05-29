@@ -1,0 +1,90 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Kraya Auctions — module-specific tokens, layered on colors_and_type.css
+   Import AFTER colors_and_type.css.
+   ────────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Status colors (reuse semantic palette + add an "auction-live" accent
+     that's distinct from generic danger red) */
+  --auction-live:      #D8261C;   /* === kraya-red, used pulsing for live  */
+  --auction-live-soft: #FBE9E7;
+  --auction-extended:  #B5731A;   /* === warning, used for extension banners */
+  --auction-closing:   #C0392B;   /* === danger, last-60s pulse */
+  --auction-awarded:   #2E7D5B;   /* === success */
+  --auction-setup:     #5F544D;   /* === neutral-600, draft */
+
+  /* Rank colors (1st/2nd/3rd + others) */
+  --rank-1-bg:  #FBE9E7;
+  --rank-1-fg:  #D8261C;
+  --rank-2-bg:  #FAEFD9;
+  --rank-2-fg:  #B5731A;
+  --rank-3-bg: #E4EEF7;
+  --rank-3-fg: #2E6FAE;
+  --rank-n-bg:  #F0EAE0;
+  --rank-n-fg:  #5F544D;
+}
+
+/* ─── Pulsing dot (used in "LIVE" indicators) ────────────────────────── */
+.kx-live-dot {
+  width: 8px; height: 8px; border-radius: 999px;
+  background: var(--auction-live);
+  box-shadow: 0 0 0 0 var(--auction-live);
+  animation: kx-pulse 1.6s ease-out infinite;
+  flex-shrink: 0;
+}
+@keyframes kx-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(216, 38, 28, 0.5); }
+  100% { box-shadow: 0 0 0 10px rgba(216, 38, 28, 0); }
+}
+
+/* ─── Countdown timer block ──────────────────────────────────────────── */
+.kx-timer {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: 0.02em;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.kx-timer .seg { color: var(--fg-1); font-weight: 600; }
+.kx-timer .sep { color: var(--fg-3); font-weight: 400; }
+.kx-timer.warn .seg { color: var(--auction-extended); }
+.kx-timer.danger .seg { color: var(--auction-closing); animation: kx-tick 1s steps(2) infinite;}
+@keyframes kx-tick {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0.55; }
+}
+
+/* ─── Rank pill (1, 2, 3, n) ─────────────────────────────────────────── */
+.kx-rank {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 999px;
+  font: 700 12px/1 var(--font-sans); flex-shrink: 0;
+  background: var(--rank-n-bg); color: var(--rank-n-fg);
+  border: 1.5px solid transparent;
+}
+.kx-rank.r1 { background: var(--rank-1-bg); color: var(--rank-1-fg); }
+.kx-rank.r2 { background: var(--rank-2-bg); color: var(--rank-2-fg); }
+.kx-rank.r3 { background: var(--rank-3-bg); color: var(--rank-3-fg); }
+.kx-rank.you { background: var(--kraya-ink); color: white; border-color: var(--kraya-red);}
+
+/* ─── Bid row (leaderboard line) ─────────────────────────────────────── */
+.kx-bid-row {
+  display: grid;
+  grid-template-columns: 28px 1fr auto auto;
+  gap: 14px; align-items: center;
+  padding: 12px 14px;
+  border-radius: 8px;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.kx-bid-row + .kx-bid-row { margin-top: 4px; }
+.kx-bid-row:hover { background: var(--bg-canvas); }
+.kx-bid-row.you {
+  background: var(--kraya-red-soft);
+  border: 1px solid var(--kraya-red-tint);
+}
+.kx-bid-row .vendor { font: 500 14px/1.2 var(--font-sans); color: var(--fg-1); }
+.kx-bid-row .meta { font: 400 11px/1 var(--font-mono); color: var(--fg-3); margin-top: 3px; }
+.kx-bid-row .bid { font: 600 16px/1 var(--font-mono); color: var(--fg-1); font-variant-numeric: tabular-nums; }
+.kx-bid-row .delta { font: 500 11px/1 var(--font-mono); color: var(--success); margin-left: 8px; }

@@ -1,0 +1,41 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 20px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .card { background: var(--bg-surface); border-radius: 12px; box-shadow: var(--shadow-2); padding: 18px; border: 1px solid var(--border-subtle);}
+  .card h4 { font: 600 16px/1.2 var(--font-sans); margin: 0 0 4px; color: var(--fg-1);}
+  .card .sub { font: 500 12px/1.2 var(--font-mono); color: var(--fg-3); margin-bottom: 14px;}
+  .stat { display: flex; align-items: baseline; gap: 8px;}
+  .stat .num { font: 700 30px/1 var(--font-sans); color: var(--fg-1); letter-spacing: -0.02em;}
+  .stat .unit { font: 500 13px/1 var(--font-sans); color: var(--fg-2);}
+  .stat .delta { font: 600 12px/1 var(--font-sans); color: var(--success); margin-left: auto;}
+  .row2 { display: flex; gap: 12px; margin-top: 14px; align-items: center;}
+  .av { width: 30px; height: 30px; border-radius: 999px; background: var(--neutral-200); color: var(--fg-2); display: grid; place-items: center; font: 600 11px/1 var(--font-sans); }
+  .meta { font: 400 12px/1.4 var(--font-sans); color: var(--fg-2);}
+  .pill { padding: 3px 9px; border-radius: 999px; background: var(--kraya-red-soft); color: var(--kraya-red); font: 600 11px/1.2 var(--font-sans); margin-left: auto;}
+</style>
+</head><body>
+  <div class="row">
+    <div class="card">
+      <div class="sub">SPEND · 30 DAYS</div>
+      <div class="stat"><span class="num">₹ 4.82</span><span class="unit">Cr</span><span class="delta">+12.4%</span></div>
+      <div class="row2">
+        <div class="av">RS</div><div class="meta">Owned by Riya S.</div>
+        <span class="pill">On track</span>
+      </div>
+    </div>
+    <div class="card">
+      <h4>Steel rods · 304L</h4>
+      <div class="sub">RFQ-2026-0418 · 8 quotes received</div>
+      <div class="stat"><span class="num">₹ 14.8L</span><span class="delta">−6.2%</span></div>
+      <div class="row2">
+        <div class="av">VK</div><div class="av" style="margin-left:-12px">PT</div>
+        <div class="meta" style="margin-left: 6px;">Closes in 2d</div>
+        <span class="pill" style="background: var(--warning-soft); color: var(--warning);">Pending</span>
+      </div>
+    </div>
+  </div>
+</body></html>

@@ -1,0 +1,56 @@
+<!-- @dsCard group="Components" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin: 0; padding: 24px; background: var(--kraya-paper); font-family: var(--font-sans);}
+  .col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px;}
+  .field { display: flex; flex-direction: column; gap: 6px;}
+  label { font: 500 12px/1 var(--font-sans); color: var(--fg-2); }
+  .input, select, textarea {
+    font: 400 14px/1 var(--font-sans); color: var(--fg-1);
+    background: var(--bg-surface);
+    border: 1px solid var(--border-default);
+    border-radius: 6px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+    width: 100%; box-sizing: border-box;
+  }
+  .input:focus, .focused { border-color: var(--kraya-red); box-shadow: 0 0 0 3px var(--kraya-red-soft);}
+  .help { font: 400 11px/1.3 var(--font-sans); color: var(--fg-3); }
+  .err  { font: 400 11px/1.3 var(--font-sans); color: var(--danger); }
+  .input.error { border-color: var(--danger); }
+  .input.error:focus { box-shadow: 0 0 0 3px var(--danger-soft);}
+  .input::placeholder { color: var(--fg-3);}
+  .chk { display: flex; align-items: center; gap: 10px; font-size: 14px;}
+  .chk-box { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--border-default); background: var(--bg-surface); display: grid; place-items: center;}
+  .chk-box.on { background: var(--kraya-red); border-color: var(--kraya-red);}
+  .chk-box.on::after { content: "✓"; color: white; font-size: 12px; font-weight: 700;}
+</style>
+</head><body>
+  <div class="col">
+    <div class="field">
+      <label>Vendor name</label>
+      <input class="input" placeholder="Search vendors…" />
+      <div class="help">Use the vendor's registered legal name.</div>
+    </div>
+    <div class="field">
+      <label>PO reference</label>
+      <input class="input focused" value="PO-2026-04711" />
+      <div class="help">Focused state · red ring</div>
+    </div>
+    <div class="field">
+      <label>Tax ID</label>
+      <input class="input error" value="29ABCD1234E1Z5X" />
+      <div class="err">GSTIN format invalid — must be 15 chars.</div>
+    </div>
+    <div class="field">
+      <label>Approval policy</label>
+      <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
+        <div class="chk"><div class="chk-box on"></div>Require finance sign-off above ₹5L</div>
+        <div class="chk"><div class="chk-box"></div>Auto-publish to vendor portal</div>
+      </div>
+    </div>
+  </div>
+</body></html>

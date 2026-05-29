@@ -1,0 +1,50 @@
+<!-- @dsCard group="Auctions" -->
+<!doctype html>
+<html><head><meta charset="utf-8" />
+<link rel="stylesheet" href="../colors_and_type.css" />
+<link rel="stylesheet" href="../auction.css" />
+<style>
+  body { margin: 0; padding: 22px; background: var(--kraya-paper); font-family: var(--font-sans); }
+  .panel { background: var(--bg-surface); border-radius: 12px; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-1); padding: 18px 22px; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px;}
+  .head h4 { font: 600 13px/1 var(--font-sans); margin: 0;}
+  .head .meta { font: 500 11px/1 var(--font-mono); color: var(--fg-3);}
+  .chart-wrap { position: relative; height: 120px; }
+  .axis-y { position: absolute; left: 0; top: 0; bottom: 18px; width: 60px; display: flex; flex-direction: column; justify-content: space-between; font: 500 10px/1 var(--font-mono); color: var(--fg-3); text-align: right; padding-right: 8px;}
+  .plot { position: absolute; left: 60px; right: 0; top: 0; bottom: 18px; border-left: 1px solid var(--border-subtle); border-bottom: 1px solid var(--border-subtle);}
+  .axis-x { position: absolute; left: 60px; right: 0; bottom: 0; height: 18px; display: flex; justify-content: space-between; font: 500 10px/1 var(--font-mono); color: var(--fg-3);}
+
+  .legend { display: flex; gap: 14px; margin-top: 12px; font: 500 11px/1 var(--font-sans); color: var(--fg-2);}
+  .legend span { display: inline-flex; align-items: center; gap: 6px;}
+  .legend i { width: 12px; height: 2px; border-radius: 2px; display: inline-block; }
+</style>
+</head><body>
+  <div class="panel">
+    <div class="head">
+      <h4>Price trajectory · RFQ-2026-0418</h4>
+      <span class="meta">Starting ₹15,80,000 → current ₹14,68,500 · 6m 12s elapsed</span>
+    </div>
+    <div class="chart-wrap">
+      <div class="axis-y">
+        <span>15.80L</span><span>15.40L</span><span>15.00L</span><span>14.60L</span>
+      </div>
+      <div class="plot">
+        <svg viewBox="0 0 400 100" preserveAspectRatio="none" style="width: 100%; height: 100%; display: block;">
+          <!-- ghost: leader -->
+          <path d="M 0,4 L 60,4 L 60,28 L 130,28 L 130,52 L 220,52 L 220,72 L 320,72 L 320,90 L 400,90"
+                fill="none" stroke="#D8261C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- your line -->
+          <path d="M 0,4 L 90,4 L 90,38 L 180,38 L 180,62 L 260,62 L 260,82 L 360,82 L 400,82"
+                fill="none" stroke="#5F544D" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+          <!-- dot on leader end -->
+          <circle cx="400" cy="90" r="3.5" fill="#D8261C"/>
+        </svg>
+      </div>
+      <div class="axis-x"><span>0:00</span><span>2:00</span><span>4:00</span><span>NOW</span></div>
+    </div>
+    <div class="legend">
+      <span><i style="background: var(--kraya-red)"></i>Lead bid</span>
+      <span><i style="background: var(--neutral-500); background-image: repeating-linear-gradient(90deg, var(--neutral-500), var(--neutral-500) 3px, transparent 3px, transparent 6px);"></i>Your bids</span>
+    </div>
+  </div>
+</body></html>
