@@ -1786,3 +1786,1969 @@ Object.assign(window, {
   TweakSlider, TweakToggle, TweakRadio, TweakSelect,
   TweakText, TweakNumber, TweakColor, TweakButton,
 });
+/* Kraya · Accounts Payable — shared shell & data.
+   AP automation flow:
+   1. E-invoices auto-fetched from GST portal by company GSTIN (api)
+   2. OCR fallback for invoices when GST OTP isn't shared
+   3. Side-by-side PO ↔ Invoice line-item match per vendor GSTIN
+   4. 3-way match: PO ↔ Invoice ↔ GRN, with diffs flagged
+   5. Accounts team establishes payable; e-way bills tracked separately. */
+
+const LOGO = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQgAAABaCAYAAABEx8i3AAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAOdEVYdFNvZnR3YXJlAEZpZ21hnrGWYwAADilJREFUeAHtnW1y00gTxzsOydcnN0A5wWZ5qeIbygkIJ4g5QcIJcE4QcoKYEyx7ArzfUgWEcAL03MAQqEqZJGz/TWtxGWtmJM2MZLl/VS4l1vhNPerp6enpJlIURSlgjRRF6Txpmm59+fJlb21t7TH/u8WP8Y8fP/7Z3NwcnZ2dZUWv+01B3Lt3b8CH/YL2J+fn5y9JUZSl4cGDBykrg1P+c4sVxAU/Mv5/ix87OM/Hwvv6zvwT/OKED0nBZ/1BiqIsDffv399jBfAX/3lyc3MzuLi4GM+eZ+Ux4MMxGwb/YyVxNP/6HimK0kkePXqU8OGYB/2j9+/fH965c+cQCgEPVgh9tHn37t2AFchzboPn0/n3UAWhKB1lMpmkOEIJ4MiK4AU/9vFghXDM1sUbPC/TixHOz7+HKghF6SisBOBLHM0994ytiW2ebuzyv6lYGVAer/iwM/8eqiAUpbskrBA+zj23g6lEr9ebLkRcXV1NfRL8f8aHrVxh5NwhRVFWBrYUjnFkxYHH0bzTMlcYOaogWgDWqL9+/bpDEWGHVWZa/1bMPHz4cAdLhRQJvpnHb9++vaBy/MPf8QkfZ5cwn8JauL29/YvP3c2f5L8RI3ExrzBUQbSAy8vLAR8OKCLfv38f8uEZKaWBic822BuKCN/AGR+2y7yGb/ghv+4Nvi87Kkfy3FTR8HPPcI5XMz5ubm6+5v7whH/Tyfx7qIJoB9FGImV1gFLglQqsTpyyb2GXLca12XN8WBPrdarsWEEM599DnZSK0mF4teIpH8ZsIcBa6GNqhOfhjOT/D9l6/YCpElY15qcXQC0IRekwctP/KRGTL9hKSNiqwBRzOt3gx8n19fXLRcoBqIJQlBVAgqUGuXMVyoGVRFakGHJUQSjKClF2JUQVRAuAt5kPGUWEzcrXpFSCr90FLxMfUUR4apBRA6iCaAHiUR6RshSIWT6gFUBXMRRFKUQVhKIohaiCUBSlEFUQiqIUogpCUZRCVEEoilJIq5c5ESve6/VMG5nGvEQYNcs2NrdcXl4iS/AWf7ck1nfA53369u3JzQ1isf/3Z/zhw2m0tDJV/hzyzFkqDqWNSwCE7EhGVxY7YH2vWZBMzk3Z7gYGBgYuNrT/bkqV/aWITJgaTw3aFLEFPsBk4PQu8bSB4CnxXFxPWRKvZtm2JzfpnlV1O0QH8Z25C4JN04OhC7RKUjqeWzAtcTMJVAuL0igMqyCGk9u+MOocA5bnBPM5+HhZe3LFD5gJYl8a2Js4E8fEbHYHjOONnpGiqpv0eVwMEUjqZM9J+0IM2bRPF2xyFbBW1t20oAV9VXXxg/UF4AzaGBicHxfVUWBiEj9CXbN7qs2R1XATV8AKq7OqnAuQqBUdTLN5aBfVHnYBFxifP8QKAUblMUChKQh/m9ggA9H7JAVv2D3iQfFEYhFYFQiA8UwW0IuFe9gD4nIrwAP67OJzAaY0vBOiN8MACiCtASKiA+oJbWXFBT98GCE6E1IwwBQ9QMYwIDGAPBkItCe4YC1bHGSfKvLQIBpzFYBCXOCAWJ7BRCoVCwYAICwCBCZECC0WJQpBEggIQkGCyABnQ2IQUA6kEgA1iACYTiQkGRoFCQgWIVCwNECAFCQIERiAUCIxCBELCBBISCCiBQAiTADCEhBZBiEgkMBRQoBBhYcEL4GBBAGRBIMkiFOAmJzDEABJCCAQ9JBgRBEEgCCIIigCEgIAAEQiIKYJDhQkIQcJBhAUhBkGBXCGCgCZICCAhTFgKFiEBFCCCFBBARKMIzNBCIkIQqAqECkBIJBxFgAJIJBRgZBzKJSFRBGgACihAJFAgiIQEICBBIBIhCIExCIIhJBIigCNEJBhJIJAApIiSIFCIQIFCBIQqEBCQIGBQZFCQeJCBhJAZFkAJCCBhCQIFCBICwIIiQCECihCCQCgAkQBEAgCiIBBIgAAMFhAhCJCIBIgiCgSgKABIhRABEFhCCCCJCIBBBYMlJBhZChCggJCIBihBRJCBCIlIAEhYIIAhJhQjAJBQohCCFMIFERACIhiAFCBBBgQRNBIJAQJQhCFAiEIEECERCIggUFBIABBhBgCgABCIiJAQjCCQYJhAIJBBEQwAIAiBBQJRCIhBAAAAACIiJhAiACIBIJRgBCChggAICCKAIihCigChQREhEBCgJAJJBiYCBBghCACCAIBBQAABhigIBBIgJCBBBIAJCBABBAIBiBQABiACIgIIJBRIAIICACIiJhCiACIBIBRgBCihggAICCKCIBCigChQREhEBCgJAJJBiYCBBghCACCAIBBQAAJiigIJBIgJCBBBIAJCBABBAIBiBQABiACIgIIJBRIAIICACIiJhCiACIBIBRgBCihggAICCKCIBCigChQREhEBCgJAJJBiYCBBghCACCAIBBQAAJiigIJBIgJCBBBIAJCBABBAIBiBQABiACIgIIJBRIAIICACIiJhCiACIBIBRgBCihggAICCKCIBCigChQREhEBCgJAJJBiYCBBghCACCAIBBQAAJiigIJBIgJCBBBIAJCBABBAIBiBQABiACIgIIJBRIAIICACIiJhCiACIBIBRgBCihggAICCKCIBCigChQREhEBCgJAJJBiYCBBghCACCAIBBQAAJiigIJBIgJCBBBIAJCBABBAIBiBQABiACIgIIJBRIAIICA==";
+
+/* ── Icons (Lucide-style) ────────────────────────────────────────────── */
+function Icon({ name, size = 16, stroke = 1.8 }) {
+  const p = { width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: stroke,
+    strokeLinecap: "round", strokeLinejoin: "round" };
+  switch (name) {
+    case "search":   return <svg {...p}><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>;
+    case "bell":     return <svg {...p}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>;
+    case "grid":     return <svg {...p}><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>;
+    case "inbox":    return <svg {...p}><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>;
+    case "scan":     return <svg {...p}><path d="M3 7V5a2 2 0 0 1 2-2h2M17 3h2a2 2 0 0 1 2 2v2M21 17v2a2 2 0 0 1-2 2h-2M7 21H5a2 2 0 0 1-2-2v-2M7 12h10"/></svg>;
+    case "link":     return <svg {...p}><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>;
+    case "layers":   return <svg {...p}><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>;
+    case "wallet":   return <svg {...p}><path d="M21 12V7a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h16v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7"/><path d="M18 12h.01"/></svg>;
+    case "truck":    return <svg {...p}><path d="M16 16V6a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v10h15zM16 8h4l3 4v4h-7M5.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5zM18.5 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/></svg>;
+    case "vendor":   return <svg {...p}><path d="M3 21h18M5 21V7l8-4v18M19 21v-9l-6-3"/></svg>;
+    case "doc":      return <svg {...p}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>;
+    case "check":    return <svg {...p}><path d="M20 6 9 17l-5-5"/></svg>;
+    case "check-c":  return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="m9 12 2 2 4-4"/></svg>;
+    case "x":        return <svg {...p}><path d="M18 6 6 18M6 6l12 12"/></svg>;
+    case "x-c":      return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg>;
+    case "alert":    return <svg {...p}><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>;
+    case "plus":     return <svg {...p}><path d="M12 5v14M5 12h14"/></svg>;
+    case "arrow":    return <svg {...p}><path d="M5 12h14M13 5l7 7-7 7"/></svg>;
+    case "arrow-l":  return <svg {...p}><path d="M19 12H5M12 5l-7 7 7 7"/></svg>;
+    case "arrow-down":return <svg {...p}><path d="M12 5v14M5 12l7 7 7-7"/></svg>;
+    case "chev-d":   return <svg {...p}><path d="m6 9 6 6 6-6"/></svg>;
+    case "chev-r":   return <svg {...p}><path d="m9 18 6-6-6-6"/></svg>;
+    case "chev-l":   return <svg {...p}><path d="m15 18-6-6 6-6"/></svg>;
+    case "download": return <svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>;
+    case "upload":   return <svg {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>;
+    case "filter":   return <svg {...p}><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>;
+    case "refresh":  return <svg {...p}><path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/></svg>;
+    case "rupee":    return <svg {...p}><path d="M6 3h12M6 8h12M6 13l9 8M6 13a6 6 0 0 0 12 0"/></svg>;
+    case "rss":      return <svg {...p}><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/></svg>;
+    case "package":  return <svg {...p}><path d="M16.5 9.4l-9-5.19M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>;
+    case "shield":   return <svg {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+    case "settings": return <svg {...p}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15 1.65 1.65 0 0 0 3.09 14H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9 1.65 1.65 0 0 0 4.27 7.18l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>;
+    case "barcode":  return <svg {...p}><path d="M3 5v14M7 5v14M11 5v14M15 5v14M19 5v14"/></svg>;
+    case "key":      return <svg {...p}><circle cx="7.5" cy="15.5" r="4.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></svg>;
+    case "eye":      return <svg {...p}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>;
+    case "map":      return <svg {...p}><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>;
+    case "pin":      return <svg {...p}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
+    case "clock":    return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>;
+    case "calendar": return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>;
+    case "more":     return <svg {...p}><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>;
+    case "open":     return <svg {...p}><path d="M15 3h6v6M10 14 21 3M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>;
+    case "split":    return <svg {...p}><path d="M16 3h5v5M4 20l17-17M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>;
+    case "warehouse":return <svg {...p}><path d="M22 8.35V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V8.35a2 2 0 0 1 1.26-1.86l8-3.2a2 2 0 0 1 1.48 0l8 3.2A2 2 0 0 1 22 8.35z"/><path d="M6 18h12V14H6zM6 14V10h12v4"/></svg>;
+    case "send":     return <svg {...p}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>;
+    case "list":     return <svg {...p}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>;
+    case "info":     return <svg {...p}><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>;
+    case "lock":     return <svg {...p}><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>;
+    default: return null;
+  }
+}
+
+/* ── Top bar ─────────────────────────────────────────────────────────── */
+function AppTopbar({ role = "Accounts", roleStyle = "accounts", business = "Haldiram Snacks Pvt Ltd", gstin = "27AAACH1234D1Z5", initials = "RS", search = true }) {
+  return (
+    <header className="ka-topbar">
+      <img className="logo" src={LOGO} alt="kraya"/>
+      <span style={{ color: "var(--fg-3)", font: "500 12px/1 var(--font-mono)" }}>/ Accounts Payable</span>
+      <span className={`role ${roleStyle}`}>{role}</span>
+      {search && (
+        <div className="search">
+          <Icon name="search" size={15} stroke={2}/>
+          <input placeholder="Search invoices, POs, GRNs, IRN, vendors…"/>
+        </div>
+      )}
+      <div className="right">
+        <button className="ka-btn ka-btn-ghost ka-btn-sm" title="Notifications"><Icon name="bell" size={15}/></button>
+        <div className="org">
+          <div className="n">{business}</div>
+          <div className="s">{gstin}</div>
+        </div>
+        <div className="avatar">{initials}</div>
+      </div>
+    </header>
+  );
+}
+
+/* ── Sidebar nav ────────────────────────────────────────────────────── */
+function Sidebar({ active = "inbox" }) {
+  const groups = [
+    {
+      label: "Ingestion",
+      items: [
+        { id: "dashboard", icon: "grid",     label: "Dashboard" },
+        { id: "inbox",     icon: "inbox",    label: "E-invoice inbox", badge: "24" },
+        { id: "ocr",       icon: "scan",     label: "OCR upload",     badge: "3" },
+        { id: "sources",   icon: "rss",      label: "GST sources" },
+      ],
+    },
+    {
+      label: "Match & verify",
+      items: [
+        { id: "po-match",  icon: "link",     label: "PO matching",    badge: "12" },
+        { id: "threeway",  icon: "layers",   label: "3-way match",    badge: "8" },
+        { id: "grn",       icon: "warehouse",label: "GRN · stores" },
+      ],
+    },
+    {
+      label: "Payables",
+      items: [
+        { id: "register",  icon: "wallet",   label: "AP register",    badge: "16" },
+        { id: "schedule",  icon: "calendar", label: "Payment runs" },
+        { id: "eway",      icon: "truck",    label: "E-way bills",    badgeLive: "live" },
+      ],
+    },
+    {
+      label: "Master",
+      items: [
+        { id: "vendors",   icon: "vendor",   label: "Vendors" },
+        { id: "settings",  icon: "settings", label: "Settings" },
+      ],
+    },
+  ];
+  return (
+    <aside className="ka-sidebar">
+      {groups.map((g, gi) => (
+        <React.Fragment key={gi}>
+          <div className="ka-nav-sec">{g.label}</div>
+          {g.items.map((it, ii) => (
+            <div key={ii} className={`ka-nav-item ${it.id === active ? "active" : ""}`}>
+              <Icon name={it.icon}/>
+              <span>{it.label}</span>
+              {it.badge && <span className="badge">{it.badge}</span>}
+              {it.badgeLive && <span className="badge live">LIVE</span>}
+            </div>
+          ))}
+        </React.Fragment>
+      ))}
+      <div style={{ marginTop: 22, padding: "12px 12px 4px" }}>
+        <div className="ka-card" style={{ background: "var(--kraya-ink)", color: "white", border: "none", boxShadow: "none" }}>
+          <div style={{ padding: 14 }}>
+            <div style={{ font: "600 10.5px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.55)", marginBottom: 8 }}>This period</div>
+            <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.02em" }}>₹ 4.82 Cr</div>
+            <div style={{ font: "500 11px/1.3 var(--font-mono)", color: "rgba(255,255,255,0.55)", marginTop: 6 }}>payables · 168 invoices</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+
+/* ── Page head ───────────────────────────────────────────────────────── */
+function PageHead({ crumbs, title, sub, actions }) {
+  return (
+    <div className="ka-pagehead">
+      <div>
+        {crumbs && (
+          <div className="breadcrumb">
+            {crumbs.map((c, i) => (
+              <React.Fragment key={i}>
+                {i > 0 && <Icon name="chev-r" size={12}/>}
+                <span className={`crumb ${i === crumbs.length - 1 ? "active" : ""}`}>{c}</span>
+              </React.Fragment>
+            ))}
+          </div>
+        )}
+        <h1>{title}</h1>
+        {sub && <p>{sub}</p>}
+      </div>
+      {actions && <div className="btns">{actions}</div>}
+    </div>
+  );
+}
+
+/* ── Card / Badge / Stat ────────────────────────────────────────────── */
+function Card({ title, meta, action, children, style, bodyStyle, noBody }) {
+  const head = (title || meta || action) && (
+    <div className="ka-card-h">
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {title && <h3>{title}</h3>}{meta && <span className="meta">{meta}</span>}
+      </div>{action}
+    </div>
+  );
+  return (
+    <div className="ka-card" style={style}>
+      {head}
+      {noBody ? children : <div className="ka-card-b" style={bodyStyle}>{children}</div>}
+    </div>
+  );
+}
+
+function Badge({ kind = "mute", dot, children, style }) {
+  return (
+    <span className={`ka-badge ka-b-${kind}`} style={style}>
+      {dot && <span className="dot"/>}{children}
+    </span>
+  );
+}
+
+function Stat({ label, value, unit, sub, delta, deltaDown, brand, currency }) {
+  return (
+    <div className={`ka-stat ${brand ? "brand" : ""}`}>
+      <div className="lbl">{label}</div>
+      <div className="v">
+        {currency && <span className="cur">{currency}</span>}
+        <span>{value}</span>
+        {unit && <span className="u">{unit}</span>}
+      </div>
+      {sub && <div style={{ font: "500 11px/1.3 var(--font-mono)", color: brand ? "rgba(255,255,255,0.55)" : "var(--fg-3)", marginTop: 6 }}>{sub}</div>}
+      {delta && <div className={`delta ${deltaDown ? "down" : ""}`}>{deltaDown ? "↓" : "↑"} {delta}</div>}
+    </div>
+  );
+}
+
+/* ── Source tag ─────────────────────────────────────────────────────── */
+function SourceTag({ source, conf }) {
+  // source: "api" | "ocr" | "manual"
+  if (source === "api") return <span className="src-tag api"><Icon name="rss" size={10} stroke={2.2}/> GST API</span>;
+  if (source === "ocr") return <span className="src-tag ocr"><Icon name="scan" size={10} stroke={2.2}/> OCR {conf ? `· ${conf}%` : ""}</span>;
+  return <span className="src-tag manual">Manual</span>;
+}
+
+/* ── Confidence meter ───────────────────────────────────────────────── */
+function Meter({ pct }) {
+  const lvl = pct >= 92 ? "ok" : pct >= 78 ? "warn" : "bad";
+  return (
+    <span className={`ka-meter ${lvl}`}>
+      <span className="bar"><span className="fill" style={{ width: `${pct}%` }}/></span>
+      {pct}%
+    </span>
+  );
+}
+
+/* ── Diff chip ──────────────────────────────────────────────────────── */
+function Diff({ kind = "ok", children }) {
+  return <span className={`ka-diff ${kind}`}>{children}</span>;
+}
+
+/* ── Steps chain ────────────────────────────────────────────────────── */
+function Steps({ items }) {
+  // items: [{ label, state: "done"|"live"|"todo" }]
+  return (
+    <div className="ka-steps">
+      {items.map((it, i) => (
+        <React.Fragment key={i}>
+          <div className={`ka-step ${it.state}`}>
+            <span className="num">{it.state === "done" ? "✓" : i + 1}</span>
+            <span>{it.label}</span>
+          </div>
+          {i < items.length - 1 && <Icon name="chev-r" size={12} stroke={2.2}/>}
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+/* ── Formatters ─────────────────────────────────────────────────────── */
+const fmtINR = (n) => "₹ " + n.toLocaleString("en-IN");
+const fmtN   = (n) => n.toLocaleString("en-IN");
+const fmtAmt = (n) => n.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/* ── Sample data: vendors, POs, invoices, GRNs ───────────────────────── */
+
+const BUYER_ORG = {
+  name: "Haldiram Snacks Pvt Ltd",
+  gstin: "27AAACH1234D1Z5",
+  branch: "Nagpur · Plant 03",
+  state: "Maharashtra",
+};
+
+const VENDORS = [
+  { id: "v1", name: "Bharat Steel Co.",        short: "BS", gstin: "27AABCB2891C1ZP", city: "Pune",     state: "MH" },
+  { id: "v2", name: "OM Bearings Pvt Ltd",     short: "OM", gstin: "27AAACO5612N1ZD", city: "Mumbai",   state: "MH" },
+  { id: "v3", name: "Tata Components",         short: "TC", gstin: "24AABCT1322L1ZR", city: "Vadodara", state: "GJ" },
+  { id: "v4", name: "Pragati Engineering",     short: "PE", gstin: "27AAGCP9921B1ZF", city: "Nashik",   state: "MH" },
+  { id: "v5", name: "Vidarbha Steel Tools",    short: "VS", gstin: "27AAACV2210R1Z1", city: "Nagpur",   state: "MH" },
+  { id: "v6", name: "Ananya Polymers",         short: "AP", gstin: "29AAACA8821J1ZN", city: "Bengaluru",state: "KA" },
+];
+
+/* Invoice inbox — mix of API-fetched and OCR */
+const INBOX = [
+  { id: "INV-2026-00428", vendor: "Bharat Steel Co.",     gstin: "27AABCB2891C1ZP", date: "26 May 26",  irn: "8a3f…7d2c", amount: 1248400, items: 14, src: "api",                status: "matched",       step: "3way" },
+  { id: "INV-2026-00427", vendor: "OM Bearings Pvt Ltd",  gstin: "27AAACO5612N1ZD", date: "26 May 26",  irn: "b6c2…44e1", amount:  246800, items:  6, src: "api",                status: "po-pending",    step: "po" },
+  { id: "INV-2026-00426", vendor: "Tata Components",      gstin: "24AABCT1322L1ZR", date: "25 May 26",  irn: "—",          amount:  482400, items: 11, src: "ocr", conf: 94,     status: "ocr-review",    step: "review" },
+  { id: "INV-2026-00425", vendor: "Pragati Engineering",  gstin: "27AAGCP9921B1ZF", date: "25 May 26",  irn: "f02a…a9b3", amount:  168200, items:  8, src: "api",                status: "grn-pending",   step: "grn" },
+  { id: "INV-2026-00424", vendor: "Vidarbha Steel Tools", gstin: "27AAACV2210R1Z1", date: "25 May 26",  irn: "—",          amount:   96800, items:  4, src: "ocr", conf: 78,     status: "ocr-review",    step: "review" },
+  { id: "INV-2026-00423", vendor: "Bharat Steel Co.",     gstin: "27AABCB2891C1ZP", date: "24 May 26",  irn: "1f48…c200", amount:  892200, items: 18, src: "api",                status: "ready",         step: "ready" },
+  { id: "INV-2026-00422", vendor: "Ananya Polymers",      gstin: "29AAACA8821J1ZN", date: "24 May 26",  irn: "44d2…ff10", amount:  324500, items:  9, src: "api",                status: "exception",     step: "ex" },
+  { id: "INV-2026-00421", vendor: "OM Bearings Pvt Ltd",  gstin: "27AAACO5612N1ZD", date: "24 May 26",  irn: "9ee1…b833", amount:  142000, items:  5, src: "api",                status: "ready",         step: "ready" },
+  { id: "INV-2026-00420", vendor: "Tata Components",      gstin: "24AABCT1322L1ZR", date: "23 May 26",  irn: "5b87…2dde", amount:  228800, items:  7, src: "api",                status: "paid",          step: "paid" },
+  { id: "INV-2026-00419", vendor: "Pragati Engineering",  gstin: "27AAGCP9921B1ZF", date: "23 May 26",  irn: "—",          amount:   72400, items:  3, src: "ocr", conf: 88,     status: "ocr-review",    step: "review" },
+];
+
+const STATUS_LABEL = {
+  "matched":     { kind: "ok",    txt: "3-way matched" },
+  "po-pending":  { kind: "warn",  txt: "PO link pending" },
+  "ocr-review":  { kind: "info",  txt: "OCR · review" },
+  "grn-pending": { kind: "warn",  txt: "Awaiting GRN" },
+  "ready":       { kind: "brand", txt: "Ready to pay" },
+  "exception":   { kind: "bad",   txt: "Exception" },
+  "paid":        { kind: "mute",  txt: "Paid" },
+};
+
+/* PO line items (open, per vendor / GSTIN) — for Bharat Steel · INV-00428 */
+const PO_LINES = [
+  { sr: 1, po: "PO-26-0418", item: "HSS Cutting Disc 12in",    desc: "Box of 25, Norton brand",        hsn: "8202",  gst: 18, qty: 20,  rate:  3120, uom: "box" },
+  { sr: 2, po: "PO-26-0418", item: "M8 304L Hex Bolt",         desc: "DIN 933, 30mm length",            hsn: "7318",  gst: 18, qty: 200, rate:    14, uom: "pc"  },
+  { sr: 3, po: "PO-26-0421", item: "GI Pipe 25mm Class B",     desc: "ISI marked, 6m length",           hsn: "7306",  gst: 18, qty: 120, rate:   142, uom: "m"   },
+  { sr: 4, po: "PO-26-0421", item: "MS Angle 50×50×6",         desc: "6m length, mill finish",          hsn: "7216",  gst: 18, qty: 80,  rate:   188, uom: "pc"  },
+  { sr: 5, po: "PO-26-0425", item: "Welding Rod E7018",        desc: "3.15mm, 5kg pack",                hsn: "8311",  gst: 18, qty: 40,  rate:   620, uom: "pack"},
+  { sr: 6, po: "PO-26-0425", item: "Hex Nut M12 Galvanized",   desc: "DIN 934, zinc plated",            hsn: "7318",  gst: 18, qty: 500, rate:     8, uom: "pc"  },
+];
+
+/* Invoice line items (vendor's submission) */
+const INV_LINES = [
+  { sr: 1, inv: "INV-00428", item: "HSS Cutting Disc 12\"",     desc: "Norton, box 25 nos",              hsn: "8202",  gst: 18, qty: 20,  rate:  3120 },
+  { sr: 2, inv: "INV-00428", item: "M8 SS 304L Hex Bolt",       desc: "DIN 933, 30 mm",                  hsn: "7318",  gst: 18, qty: 200, rate:    14 },
+  { sr: 3, inv: "INV-00428", item: "GI Pipe 25 mm Cl-B",        desc: "ISI · 6 m",                       hsn: "7306",  gst: 18, qty: 120, rate:   148 }, // rate diff
+  { sr: 4, inv: "INV-00428", item: "MS Angle 50×50×6",          desc: "6 m length",                      hsn: "7216",  gst: 18, qty: 80,  rate:   188 },
+  { sr: 5, inv: "INV-00428", item: "Welding Rod E7018",         desc: "3.15 mm · 5 kg pkt",              hsn: "8311",  gst: 18, qty: 40,  rate:   620 },
+  { sr: 6, inv: "INV-00428", item: "Hex Nut M12 GI",            desc: "DIN 934",                         hsn: "7318",  gst: 18, qty: 520, rate:     8 }, // qty diff
+  { sr: 7, inv: "INV-00428", item: "Freight & handling",        desc: "—",                               hsn: "9965",  gst: 18, qty:  1,  rate:  4800 }, // unmatched
+];
+
+/* GRN data — what stores received */
+const GRN_LINES = [
+  { sr: 1, grn: "GRN-2841", item: "HSS Cutting Disc 12in",   recvQty: 20,  date: "25 May 26", remarks: "OK" },
+  { sr: 2, grn: "GRN-2841", item: "M8 304L Hex Bolt",        recvQty: 200, date: "25 May 26", remarks: "OK" },
+  { sr: 3, grn: "GRN-2842", item: "GI Pipe 25mm Class B",    recvQty: 120, date: "25 May 26", remarks: "OK" },
+  { sr: 4, grn: "GRN-2842", item: "MS Angle 50×50×6",        recvQty: 78,  date: "25 May 26", remarks: "2 pcs short" }, // grn qty diff
+  { sr: 5, grn: "GRN-2843", item: "Welding Rod E7018",       recvQty: 40,  date: "26 May 26", remarks: "OK" },
+  { sr: 6, grn: "GRN-2843", item: "Hex Nut M12 Galvanized",  recvQty: 500, date: "26 May 26", remarks: "Excess in invoice" },
+];
+
+/* Activity feed */
+const ACTIVITY = [
+  { t: "10:42", icon: "rss",     iconBg: "var(--ap-info-bg)", iconColor: "var(--ap-info)",
+    who: "GST e-invoice API", what: "Fetched 4 invoices for GSTIN 27AAACH1234D1Z5 · ₹ 18.4 L total" },
+  { t: "10:38", icon: "scan",    iconBg: "var(--ap-warn-bg)", iconColor: "var(--ap-warn)",
+    who: "OCR · Google Vision",  what: "Processed INV-2026-00426 from Tata Components · confidence 94%" },
+  { t: "10:30", icon: "warehouse", iconBg: "var(--ap-info-bg)", iconColor: "var(--ap-info)",
+    who: "Sandeep K · Stores",   what: "Recorded GRN-2842 against PO-26-0421 (Pragati Engg) · 4 lines" },
+  { t: "10:22", icon: "check-c", iconBg: "var(--ap-ok-bg)",   iconColor: "var(--ap-ok)",
+    who: "Rohit S · Purchase",   what: "Matched INV-2026-00425 line items to PO-26-0421 (1 quantity flag)" },
+  { t: "09:58", icon: "wallet",  iconBg: "var(--kraya-red-soft)", iconColor: "var(--kraya-red)",
+    who: "Asha M · Accounts",    what: "Released payment ₹ 8.92 L · INV-2026-00423 (Bharat Steel) via NEFT" },
+  { t: "09:41", icon: "alert",   iconBg: "var(--ap-bad-bg)",  iconColor: "var(--ap-bad)",
+    who: "Compliance check",     what: "Vendor Ananya Polymers · INV-2026-00422 flagged — HSN mismatch on 2 lines" },
+];
+
+/* GST API connections */
+const SOURCES = [
+  { gstin: "27AAACH1234D1Z5", branch: "Plant 03 · Nagpur",        state: "Maharashtra", health: "ok",   lastPull: "2 min ago",  invMonth: 142, otp: "active" },
+  { gstin: "29AAACH1234D2Z3", branch: "DC · Bengaluru",           state: "Karnataka",   health: "ok",   lastPull: "5 min ago",  invMonth:  68, otp: "active" },
+  { gstin: "07AAACH1234D3Z1", branch: "HO · Delhi",               state: "Delhi",       health: "warn", lastPull: "2 hr ago",   invMonth: 102, otp: "expiring" },
+  { gstin: "33AAACH1234D4Z8", branch: "South Plant · Chennai",    state: "Tamil Nadu",  health: "bad",  lastPull: "Yesterday",  invMonth:  44, otp: "needs OTP" },
+  { gstin: "06AAACH1234D5Z6", branch: "Warehouse · Gurugram",     state: "Haryana",     health: "ok",   lastPull: "8 min ago",  invMonth:  29, otp: "active" },
+];
+
+/* E-way bills tracking */
+const EWAYS = [
+  { id: "EWB-271-9482", inv: "INV-2026-00428", vendor: "Bharat Steel Co.", from: "Pune",    to: "Nagpur",    distance: "718 km", vehicle: "MH-12-AB-3421", driver: "Vikram T.",   valid: "27 May, 22:00", status: "in-transit", progress: 62 },
+  { id: "EWB-271-9481", inv: "INV-2026-00427", vendor: "OM Bearings",      from: "Mumbai",  to: "Nagpur",    distance: "832 km", vehicle: "MH-04-PQ-1212", driver: "Bhushan R.",  valid: "28 May, 06:00", status: "in-transit", progress: 28 },
+  { id: "EWB-271-9479", inv: "INV-2026-00425", vendor: "Pragati Engg",     from: "Nashik",  to: "Nagpur",    distance: "612 km", vehicle: "MH-15-CD-8821", driver: "Manoj P.",    valid: "26 May, 18:00", status: "delivered", progress: 100 },
+  { id: "EWB-271-9478", inv: "INV-2026-00423", vendor: "Bharat Steel Co.", from: "Pune",    to: "Nagpur",    distance: "718 km", vehicle: "MH-12-XY-4490", driver: "Sandeep G.",  valid: "24 May, 22:00", status: "delivered", progress: 100 },
+  { id: "EWB-271-9477", inv: "INV-2026-00422", vendor: "Ananya Polymers",  from: "Bengaluru",to:"Nagpur",    distance: "1080 km",vehicle: "KA-05-MN-7711", driver: "Suresh K.",   valid: "26 May, 18:00", status: "expiring",   progress: 84 },
+];
+
+const EWAY_STATUS = {
+  "in-transit": { kind: "info",  txt: "In transit" },
+  "delivered":  { kind: "ok",    txt: "Delivered" },
+  "expiring":   { kind: "warn",  txt: "Expiring soon" },
+  "expired":    { kind: "bad",   txt: "Expired" },
+};
+
+/* AP register entries (ready to pay) */
+const PAYABLES = [
+  { id: "INV-2026-00423", vendor: "Bharat Steel Co.",    gstin: "27AABCB2891C1ZP", amount:  892200, dueIn: 3,  approvers: ["RS", "AM"], holds: [],                  paymentMode: "NEFT" },
+  { id: "INV-2026-00421", vendor: "OM Bearings",         gstin: "27AAACO5612N1ZD", amount:  142000, dueIn: 5,  approvers: ["RS"],       holds: [],                  paymentMode: "NEFT" },
+  { id: "INV-2026-00417", vendor: "Pragati Engineering", gstin: "27AAGCP9921B1ZF", amount:  328400, dueIn: 1,  approvers: ["RS", "AM"], holds: ["Quality NCR open"],paymentMode: "RTGS" },
+  { id: "INV-2026-00414", vendor: "Vidarbha Steel Tools",gstin: "27AAACV2210R1Z1", amount:   62800, dueIn: 7,  approvers: ["RS"],       holds: [],                  paymentMode: "UPI"  },
+  { id: "INV-2026-00412", vendor: "Tata Components",     gstin: "24AABCT1322L1ZR", amount:  448600, dueIn: -2, approvers: ["RS", "AM"], holds: [],                  paymentMode: "RTGS" },
+  { id: "INV-2026-00408", vendor: "Ananya Polymers",     gstin: "29AAACA8821J1ZN", amount:  216200, dueIn: 9,  approvers: ["RS"],       holds: [],                  paymentMode: "NEFT" },
+];
+
+Object.assign(window, {
+  Icon, AppTopbar, Sidebar, PageHead, Card, Badge, Stat, SourceTag, Meter, Diff, Steps,
+  fmtINR, fmtN, fmtAmt,
+  LOGO, BUYER_ORG, VENDORS, INBOX, STATUS_LABEL,
+  PO_LINES, INV_LINES, GRN_LINES, ACTIVITY, SOURCES, EWAYS, EWAY_STATUS, PAYABLES,
+});
+/* Kraya AP — Ingestion screens
+   1. Dashboard         — overview of the AP funnel + activity
+   2. Invoice inbox     — list of all e-invoices (api + ocr)
+   3. OCR upload        — drop zone + parsed-fields review (fallback path)
+   4. GST API sources   — per-GSTIN connection status
+*/
+
+/* ────────────────────────────────────────────────────────────────────────
+   01 · AP Dashboard
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenDashboard() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar/>
+      <Sidebar active="dashboard"/>
+      <main className="ka-canvas">
+        <PageHead
+          title="Accounts Payable · Overview"
+          sub="Live view of the invoice-to-pay funnel. Today, Kraya auto-fetched 24 e-invoices from your 5 GSTINs; 3 invoices came in by OCR and need a quick review."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="download" size={13}/> Export</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="refresh"  size={13}/> Sync GST</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="plus"     size={13}/> Record invoice</button>
+            </>
+          }
+        />
+
+        {/* Step chain — invoice → PO → GRN → 3-way → AP */}
+        <div style={{ marginBottom: 20 }}>
+          <Steps items={[
+            { label: "E-invoice / OCR · 24",  state: "done" },
+            { label: "PO link · 12",          state: "live" },
+            { label: "GRN match · 8",         state: "todo" },
+            { label: "3-way match · 8",       state: "todo" },
+            { label: "Payable · 16",          state: "todo" },
+          ]}/>
+        </div>
+
+        <div className="ka-stats cols-5">
+          <Stat label="Auto-fetched today" value="24" sub="from 5 active GSTINs"  delta="6 vs yesterday"/>
+          <Stat label="OCR fallback"       value="3"  sub="needs review"          delta="2 vs yesterday"/>
+          <Stat label="Awaiting PO link"   value="12" sub="exception queue"       delta="2"  deltaDown/>
+          <Stat label="Ready to pay"       value="16" sub="3-way matched"         currency="₹" />
+          <Stat brand label="Payable · cycle" value="4.82" unit="Cr" sub="168 invoices · May FY26" currency="₹"/>
+        </div>
+
+        <div className="ka-2col" style={{ marginBottom: 18 }}>
+          {/* Funnel split */}
+          <Card title="Invoice funnel · this week" meta="Tue 26 May, 11:04 AM" action={<button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="more" size={14}/></button>}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(5,1fr)", gap: 1, background: "var(--border-subtle)",
+                          border: "1px solid var(--border-subtle)", borderRadius: 8, overflow: "hidden" }}>
+              {[
+                { lbl: "Captured",     val: 124, sub: "API + OCR", pct: 100, color: "var(--ap-info)" },
+                { lbl: "PO linked",    val: 112, sub: "side-by-side", pct: 90, color: "var(--ap-info)" },
+                { lbl: "GRN received", val:  96, sub: "stores team", pct: 77, color: "var(--ap-warn)" },
+                { lbl: "3-way OK",     val:  84, sub: "auto + manual", pct: 67, color: "var(--ap-ok)"  },
+                { lbl: "Released",     val:  72, sub: "payment run",   pct: 58, color: "var(--kraya-red)" },
+              ].map((s, i) => (
+                <div key={i} style={{ padding: "16px 14px", background: "var(--bg-surface)" }}>
+                  <div style={{ font: "600 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)" }}>{s.lbl}</div>
+                  <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.02em", marginTop: 8 }}>{s.val}</div>
+                  <div style={{ font: "500 11px/1 var(--font-mono)", color: "var(--fg-3)", marginTop: 4 }}>{s.sub}</div>
+                  <div style={{ height: 4, background: "var(--neutral-100)", borderRadius: 999, marginTop: 12, overflow: "hidden" }}>
+                    <div style={{ width: `${s.pct}%`, height: "100%", background: s.color }}/>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="ka-subhead">
+                <h4>Exceptions to clear</h4>
+                <span className="meta">5 open</span>
+              </div>
+              <table className="ka-tbl compact">
+                <thead><tr>
+                  <th>Invoice</th><th>Vendor</th><th>Issue</th><th>Owner</th><th className="num">Amount</th><th></th>
+                </tr></thead>
+                <tbody>
+                  <tr className="row-bad">
+                    <td className="ka-mono">INV-2026-00422</td><td>Ananya Polymers</td><td>HSN mismatch · 2 lines</td><td><span className="ka-av" style={{ width: 22, height: 22, fontSize: 9 }}>RS</span></td><td className="num">₹ 3,24,500</td><td><Icon name="chev-r" size={14}/></td>
+                  </tr>
+                  <tr className="row-warn">
+                    <td className="ka-mono">INV-2026-00427</td><td>OM Bearings</td><td>No matching open PO</td><td><span className="ka-av" style={{ width: 22, height: 22, fontSize: 9 }}>NK</span></td><td className="num">₹ 2,46,800</td><td><Icon name="chev-r" size={14}/></td>
+                  </tr>
+                  <tr className="row-warn">
+                    <td className="ka-mono">INV-2026-00425</td><td>Pragati Engineering</td><td>GRN qty short · 2 pcs MS Angle</td><td><span className="ka-av" style={{ width: 22, height: 22, fontSize: 9 }}>SK</span></td><td className="num">₹ 1,68,200</td><td><Icon name="chev-r" size={14}/></td>
+                  </tr>
+                  <tr className="row-warn">
+                    <td className="ka-mono">INV-2026-00424</td><td>Vidarbha Steel Tools</td><td>OCR confidence 78% · verify</td><td><span className="ka-av" style={{ width: 22, height: 22, fontSize: 9 }}>RS</span></td><td className="num">₹ 96,800</td><td><Icon name="chev-r" size={14}/></td>
+                  </tr>
+                  <tr className="row-bad">
+                    <td className="ka-mono">INV-2026-00417</td><td>Pragati Engineering</td><td>Quality NCR hold · acct hold</td><td><span className="ka-av" style={{ width: 22, height: 22, fontSize: 9 }}>AM</span></td><td className="num">₹ 3,28,400</td><td><Icon name="chev-r" size={14}/></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </Card>
+
+          {/* Activity */}
+          <Card title="Activity" meta="Live"
+                action={<button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="filter" size={13}/></button>}
+                noBody bodyStyle={{ padding: 0 }}>
+            <div className="ka-activity">
+              {ACTIVITY.map((a, i) => (
+                <div className="row" key={i}>
+                  <div className="icon-wrap" style={{ background: a.iconBg, color: a.iconColor }}>
+                    <Icon name={a.icon} size={14} stroke={2}/>
+                  </div>
+                  <div className="body">
+                    <div className="top">
+                      <span className="who">{a.who}</span>
+                    </div>
+                    <div className="what">{a.what}</div>
+                  </div>
+                  <span className="when">{a.t}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* Per-vendor payables strip */}
+        <Card title="Top vendors · current cycle" meta="May FY26"
+          action={<a href="#" className="ka-btn ka-btn-ghost ka-btn-sm">View all <Icon name="chev-r" size={12}/></a>}>
+          <table className="ka-tbl">
+            <thead><tr>
+              <th>Vendor</th><th>GSTIN</th><th className="num">Open POs</th><th className="num">Invoices</th>
+              <th className="num">3-way OK</th><th className="num">Payable</th><th>On-time pay</th>
+            </tr></thead>
+            <tbody>
+              {[
+                { v: "Bharat Steel Co.",    g: "27AABCB2891C1ZP", po: 12, inv: 18, ok: 16, pay: 2840000, otp: 94 },
+                { v: "OM Bearings",         g: "27AAACO5612N1ZD", po:  7, inv: 11, ok:  9, pay:  428000, otp: 100 },
+                { v: "Tata Components",     g: "24AABCT1322L1ZR", po:  9, inv: 12, ok: 10, pay:  768400, otp: 86 },
+                { v: "Pragati Engineering", g: "27AAGCP9921B1ZF", po:  6, inv:  8, ok:  5, pay:  496600, otp: 72 },
+                { v: "Vidarbha Steel Tools",g: "27AAACV2210R1Z1", po:  4, inv:  4, ok:  4, pay:   62800, otp: 100 },
+              ].map((r, i) => (
+                <tr key={i}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                      <span className="ka-av">{r.v.split(" ").map(w => w[0]).slice(0, 2).join("")}</span>
+                      <span style={{ fontWeight: 600 }}>{r.v}</span>
+                    </div>
+                  </td>
+                  <td className="ka-mono" style={{ color: "var(--fg-2)" }}>{r.g}</td>
+                  <td className="num">{r.po}</td>
+                  <td className="num">{r.inv}</td>
+                  <td className="num"><Badge kind="ok" dot>{r.ok}/{r.inv}</Badge></td>
+                  <td className="num" style={{ fontWeight: 600 }}>{fmtINR(r.pay)}</td>
+                  <td><Meter pct={r.otp}/></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   02 · E-invoice inbox
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenInbox() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar/>
+      <Sidebar active="inbox"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Ingestion", "E-invoice inbox"]}
+          title="E-invoice inbox"
+          sub="Invoices flow in two ways: auto-fetched from the GST e-invoice portal against your registered GSTINs, and OCR-captured when a vendor doesn't share GST OTP access. Both land here."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="filter" size={13}/> Filter</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="refresh" size={13}/> Sync GST</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="upload" size={13}/> Upload PDF / image</button>
+            </>
+          }
+        />
+
+        <div className="ka-stats cols-6" style={{ marginBottom: 16 }}>
+          <Stat label="Today · API"      value="21" sub="auto-fetched"/>
+          <Stat label="Today · OCR"      value="3"  sub="needs review"/>
+          <Stat label="PO link pending"  value="12" sub="6 vendors"/>
+          <Stat label="GRN pending"      value="8"  sub="awaiting stores"/>
+          <Stat label="3-way matched"    value="16" sub="ready to pay"/>
+          <Stat label="Exceptions"       value="5"  sub="action needed"/>
+        </div>
+
+        <div className="ka-tabs">
+          <div className="ka-tab active">All <span className="ct">218</span></div>
+          <div className="ka-tab">OCR review <span className="ct">3</span></div>
+          <div className="ka-tab">PO link pending <span className="ct">12</span></div>
+          <div className="ka-tab">GRN pending <span className="ct">8</span></div>
+          <div className="ka-tab">3-way matched <span className="ct">16</span></div>
+          <div className="ka-tab">Exceptions <span className="ct">5</span></div>
+          <div className="ka-tab">Paid <span className="ct">174</span></div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
+          <div className="ka-pills">
+            <div className="ka-pill active">All vendors <span className="ct">6</span></div>
+            <div className="ka-pill">Source: GST API <span className="ct">198</span></div>
+            <div className="ka-pill">Source: OCR <span className="ct">17</span></div>
+            <div className="ka-pill">Source: Manual <span className="ct">3</span></div>
+          </div>
+          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ font: "500 11.5px/1 var(--font-mono)", color: "var(--fg-3)" }}>Sort: Newest first</span>
+            <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="chev-d" size={12}/></button>
+          </div>
+        </div>
+
+        <Card noBody>
+          <table className="ka-tbl">
+            <thead><tr>
+              <th style={{ width: 28 }}></th>
+              <th>Invoice #</th>
+              <th>Vendor · GSTIN</th>
+              <th>Date</th>
+              <th>IRN</th>
+              <th className="num">Items</th>
+              <th className="num">Amount</th>
+              <th>Source</th>
+              <th>Status</th>
+              <th style={{ width: 36 }}></th>
+            </tr></thead>
+            <tbody>
+              {INBOX.map((inv, i) => {
+                const s = STATUS_LABEL[inv.status];
+                const rowCls = inv.status === "exception" ? "row-bad" :
+                               inv.status === "ready"     ? "row-ok"  : "";
+                return (
+                  <tr key={i} className={rowCls}>
+                    <td><input type="checkbox" style={{ accentColor: "var(--kraya-red)" }}/></td>
+                    <td>
+                      <div style={{ font: "600 12.5px/1.2 var(--font-mono)" }}>{inv.id}</div>
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{inv.vendor}</div>
+                      <div className="sub">{inv.gstin}</div>
+                    </td>
+                    <td className="ka-mono" style={{ color: "var(--fg-2)" }}>{inv.date}</td>
+                    <td className="ka-mono" style={{ color: "var(--fg-2)" }}>{inv.irn}</td>
+                    <td className="num">{inv.items}</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{fmtINR(inv.amount)}</td>
+                    <td>
+                      <span className="ka-src">
+                        <SourceTag source={inv.src} conf={inv.conf}/>
+                      </span>
+                    </td>
+                    <td><Badge kind={s.kind} dot>{s.txt}</Badge></td>
+                    <td><button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="chev-r" size={14}/></button></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "12px 18px", borderTop: "1px solid var(--border-subtle)",
+                        background: "var(--bg-canvas)", font: "500 11.5px/1 var(--font-mono)", color: "var(--fg-3)" }}>
+            <span>Showing 10 of 218 invoices</span>
+            <div style={{ display: "flex", gap: 6 }}>
+              <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="chev-l" size={12}/> Prev</button>
+              <button className="ka-btn ka-btn-outline ka-btn-sm">Next <Icon name="chev-r" size={12}/></button>
+            </div>
+          </div>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   03 · OCR upload + review (fallback path)
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenOCR() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar/>
+      <Sidebar active="ocr"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Ingestion", "OCR upload"]}
+          title="OCR upload · invoice review"
+          sub="When a vendor doesn't share the GST e-invoice OTP, drop the PDF or scanned image here. Kraya runs Google Vision OCR, parses the invoice into structured line items, and shows confidence per field — you confirm or correct, then we push to the matching flow."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="upload" size={13}/> Bulk upload</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="check" size={13}/> Confirm &amp; queue match</button>
+            </>
+          }
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 18 }}>
+          {/* Drop zone */}
+          <div className="ka-drop">
+            <div style={{ width: 44, height: 44, borderRadius: 999, background: "var(--kraya-red-soft)",
+                          display: "grid", placeItems: "center", margin: "0 auto 12px", color: "var(--kraya-red)" }}>
+              <Icon name="upload" size={22} stroke={2}/>
+            </div>
+            <div className="ttl">Drop invoice PDFs or images here</div>
+            <div className="sub">Or <a className="kraya-link" style={{ color: "var(--kraya-red)" }}>browse files</a> · PDF, PNG, JPG up to 25 MB · Multi-page supported</div>
+            <div style={{ marginTop: 14, font: "500 10.5px/1.3 var(--font-mono)", color: "var(--fg-3)" }}>
+              Google Vision OCR · 99.4% line-item recovery on tested datasets
+            </div>
+          </div>
+
+          {/* Recent OCR queue */}
+          <Card title="In review" meta="3 invoices · last 24h" noBody bodyStyle={{ padding: 0 }}>
+            <table className="ka-tbl compact">
+              <thead><tr><th>File</th><th>Vendor (detected)</th><th>Conf.</th><th></th></tr></thead>
+              <tbody>
+                <tr><td className="ka-mono">tata-INV-00426.pdf</td><td>Tata Components</td><td><Meter pct={94}/></td><td><Icon name="chev-r" size={14}/></td></tr>
+                <tr className="row-warn"><td className="ka-mono">vst-024424.jpg</td><td>Vidarbha Steel Tools</td><td><Meter pct={78}/></td><td><Icon name="chev-r" size={14}/></td></tr>
+                <tr><td className="ka-mono">pragati-419.pdf</td><td>Pragati Engineering</td><td><Meter pct={88}/></td><td><Icon name="chev-r" size={14}/></td></tr>
+              </tbody>
+            </table>
+          </Card>
+        </div>
+
+        {/* Side-by-side: scan + parsed fields */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.1fr", gap: 16 }}>
+          {/* Scan preview with bounding boxes */}
+          <Card title="Scan · tata-INV-00426.pdf" meta="Page 1 of 1"
+                action={<div style={{ display: "flex", gap: 6 }}>
+                  <button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="eye" size={13}/></button>
+                  <button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="download" size={13}/></button>
+                </div>}>
+            <div style={{ position: "relative", background: "white", border: "1px solid var(--border-subtle)",
+                          borderRadius: 6, padding: "20px 22px", height: 560, overflow: "hidden",
+                          font: "400 11px/1.55 var(--font-sans)", color: "var(--fg-1)" }}>
+              {/* Faux scanned invoice */}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+                <div>
+                  <div style={{ font: "700 18px/1 var(--font-sans)", marginBottom: 4 }}>TATA COMPONENTS</div>
+                  <div style={{ color: "var(--fg-3)", font: "500 10px/1.3 var(--font-mono)" }}>Plot 14, Sector 21, Vadodara 390023</div>
+                  <div style={{ color: "var(--fg-3)", font: "500 10px/1.3 var(--font-mono)" }}>GSTIN 24AABCT1322L1ZR</div>
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ font: "600 13px/1 var(--font-sans)" }}>TAX INVOICE</div>
+                  <div style={{ color: "var(--fg-3)", font: "500 10px/1.3 var(--font-mono)", marginTop: 4 }}>INV / TC / 00426</div>
+                  <div style={{ color: "var(--fg-3)", font: "500 10px/1.3 var(--font-mono)" }}>25-May-2026</div>
+                </div>
+              </div>
+              <div style={{ borderTop: "1px dashed var(--neutral-300)", paddingTop: 10, marginBottom: 12, font: "500 10.5px/1.5 var(--font-mono)", color: "var(--fg-2)" }}>
+                <div><b style={{ color: "var(--fg-1)" }}>Bill to:</b> Haldiram Snacks Pvt Ltd, Plant 03 · Nagpur</div>
+                <div>GSTIN: 27AAACH1234D1Z5 · PO ref: PO-26-0414</div>
+              </div>
+
+              <table style={{ width: "100%", borderCollapse: "collapse", font: "400 10px/1.4 var(--font-mono)" }}>
+                <thead>
+                  <tr style={{ background: "#f5f1ea" }}>
+                    {["#", "Item", "HSN", "Qty", "Rate", "GST%", "Amount"].map(h => (
+                      <th key={h} style={{ padding: "6px 8px", textAlign: "left", borderBottom: "1px solid var(--neutral-300)" }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td style={{ padding: 6 }}>1</td><td>MNX-32 Contactor 32A</td><td>8536</td><td>40</td><td>1,480</td><td>18%</td><td>59,200</td></tr>
+                  <tr><td style={{ padding: 6 }}>2</td><td>Push button NO+NC</td><td>8536</td><td>120</td><td>92</td><td>18%</td><td>11,040</td></tr>
+                  <tr><td style={{ padding: 6 }}>3</td><td>Relay 4-pole 24V DC</td><td>8536</td><td>60</td><td>720</td><td>18%</td><td>43,200</td></tr>
+                  <tr><td style={{ padding: 6 }}>4</td><td>Cable PVC 2.5 sq.mm</td><td>8544</td><td>800</td><td>34</td><td>18%</td><td>27,200</td></tr>
+                  <tr><td style={{ padding: 6 }}>5</td><td>Switch SPST 16A</td><td>8536</td><td>200</td><td>180</td><td>18%</td><td>36,000</td></tr>
+                  <tr><td style={{ padding: 6 }}>6</td><td>Cable gland 25mm</td><td>8536</td><td>50</td><td>112</td><td>18%</td><td>5,600</td></tr>
+                </tbody>
+              </table>
+
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 18, font: "500 11px/1.4 var(--font-mono)" }}>
+                <div style={{ color: "var(--fg-3)" }}>E-way bill: 271-9476 · Vehicle MH-12-RJ-2218</div>
+                <div style={{ textAlign: "right" }}>
+                  <div>Subtotal &emsp; 1,82,240</div>
+                  <div>CGST 9% &emsp; 16,402</div>
+                  <div>SGST 9% &emsp; 16,402</div>
+                  <div style={{ fontWeight: 700, marginTop: 4, fontSize: 12 }}>Total &emsp; ₹ 2,15,044</div>
+                </div>
+              </div>
+
+              {/* OCR bounding box overlays */}
+              <div className="ka-bbox" style={{ left: 22,  top:  20, width: 200, height: 22 }}/>
+              <div className="ka-bbox" style={{ left: 22,  top:  56, width: 240, height: 14 }}/>
+              <div className="ka-bbox" style={{ right: 22, top:  20, width: 110, height: 18 }}/>
+              <div className="ka-bbox" style={{ left: 22,  top: 156, width: "calc(100% - 44px)", height: 132 }}/>
+              <div className="ka-bbox" style={{ right: 22, bottom:18, width: 160, height: 78  }}/>
+            </div>
+          </Card>
+
+          {/* Parsed fields */}
+          <Card title="Parsed fields · review &amp; confirm" meta="Confidence per field shown"
+            action={<Badge kind="info" dot>OCR · Google Vision</Badge>}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px 18px", marginBottom: 18 }}>
+              {[
+                ["Vendor name",      "Tata Components",      98],
+                ["Vendor GSTIN",     "24AABCT1322L1ZR",      99],
+                ["Invoice number",   "INV / TC / 00426",     97],
+                ["Invoice date",     "25-May-2026",          99],
+                ["Bill-to GSTIN",    "27AAACH1234D1Z5",      96],
+                ["PO reference",     "PO-26-0414",           92],
+                ["Place of supply",  "Maharashtra",          90],
+                ["E-way bill",       "271-9476",             95],
+                ["Subtotal",         "₹ 1,82,240",           99],
+                ["Tax (CGST+SGST)",  "₹ 32,804",             99],
+                ["Total",            "₹ 2,15,044",           99],
+                ["IRN",              "—",                    100],
+              ].map(([k, v, c], i) => (
+                <div key={i} style={{ background: "var(--bg-canvas)", padding: "9px 11px", borderRadius: 6, border: "1px solid var(--border-subtle)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+                    <span style={{ font: "500 10px/1 var(--font-sans)", color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase" }}>{k}</span>
+                    <Meter pct={c}/>
+                  </div>
+                  <div style={{ font: "500 12px/1.2 var(--font-mono)", color: "var(--fg-1)" }}>{v}</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="ka-subhead">
+              <h4>Line items · 6 detected</h4>
+              <span className="meta">Drag a row to merge · click to edit</span>
+            </div>
+            <table className="ka-tbl compact">
+              <thead><tr>
+                <th>#</th><th>Item</th><th>HSN</th><th className="num">Qty</th><th className="num">Rate</th><th className="num">GST</th><th className="num">Amt</th><th>Conf.</th>
+              </tr></thead>
+              <tbody>
+                <tr><td>1</td><td>MNX-32 Contactor 32A</td><td className="ka-mono">8536</td><td className="num">40</td><td className="num">1,480</td><td className="num">18%</td><td className="num">59,200</td><td><Meter pct={96}/></td></tr>
+                <tr><td>2</td><td>Push button NO+NC</td><td className="ka-mono">8536</td><td className="num">120</td><td className="num">92</td><td className="num">18%</td><td className="num">11,040</td><td><Meter pct={92}/></td></tr>
+                <tr><td>3</td><td>Relay 4-pole 24V DC</td><td className="ka-mono">8536</td><td className="num">60</td><td className="num">720</td><td className="num">18%</td><td className="num">43,200</td><td><Meter pct={94}/></td></tr>
+                <tr><td>4</td><td>Cable PVC 2.5 sq.mm</td><td className="ka-mono">8544</td><td className="num">800</td><td className="num">34</td><td className="num">18%</td><td className="num">27,200</td><td><Meter pct={97}/></td></tr>
+                <tr className="row-warn"><td>5</td><td>Switch SPST 16A</td><td className="ka-mono">8536</td><td className="num">200</td><td className="num">180</td><td className="num">18%</td><td className="num">36,000</td><td><Meter pct={82}/></td></tr>
+                <tr><td>6</td><td>Cable gland 25mm</td><td className="ka-mono">8536</td><td className="num">50</td><td className="num">112</td><td className="num">18%</td><td className="num">5,600</td><td><Meter pct={91}/></td></tr>
+              </tbody>
+            </table>
+
+            <div className="ka-div"/>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div className="ka-hint">
+                <Icon name="alert" size={13}/>
+                Line 5 confidence below 85% · please verify rate &amp; amount.
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <button className="ka-btn ka-btn-outline ka-btn-sm">Skip</button>
+                <button className="ka-btn ka-btn-primary ka-btn-sm"><Icon name="check" size={12}/> Confirm &amp; match to PO</button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   04 · GST sources · per-GSTIN connection status
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenSources() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar/>
+      <Sidebar active="sources"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Ingestion", "GST sources"]}
+          title="GST e-invoice sources"
+          sub="Each GSTIN registered for your company is paired with the GST e-invoice portal. Kraya polls every 5 minutes and pulls fresh invoices automatically. If a session's OTP expires, this is where you reconnect."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="refresh" size={13}/> Sync all</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="plus"    size={13}/> Add GSTIN</button>
+            </>
+          }
+        />
+
+        <div className="ka-stats cols-4" style={{ marginBottom: 18 }}>
+          <Stat label="Total GSTINs"      value="5"   sub="across 5 states"/>
+          <Stat label="Healthy"           value="3"   sub="auto-pulling"/>
+          <Stat label="Action needed"     value="2"   sub="OTP / connection"/>
+          <Stat label="Invoices · 7d"     value="386" sub="auto-fetched"/>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+          {SOURCES.map((s, i) => {
+            const kind = s.health === "ok" ? "ok" : s.health === "warn" ? "warn" : "bad";
+            const otpKind = s.otp === "active" ? "ok" : s.otp === "expiring" ? "warn" : "bad";
+            return (
+              <Card key={i} noBody>
+                <div style={{ padding: "16px 18px", display: "flex", alignItems: "center", justifyContent: "space-between",
+                              borderBottom: "1px solid var(--border-subtle)" }}>
+                  <div>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+                      <span className="ka-av" style={{ background: kind === "bad" ? "var(--ap-bad-bg)" : kind === "warn" ? "var(--ap-warn-bg)" : "var(--ap-ok-bg)",
+                                                       color: kind === "bad" ? "var(--ap-bad)" : kind === "warn" ? "var(--ap-warn)" : "var(--ap-ok)" }}>
+                        <Icon name={kind === "ok" ? "check-c" : kind === "warn" ? "alert" : "x-c"} size={14} stroke={2}/>
+                      </span>
+                      <div style={{ font: "600 14px/1.1 var(--font-sans)" }}>{s.branch}</div>
+                      <Badge kind={kind} dot>{kind === "ok" ? "Healthy" : kind === "warn" ? "OTP expiring" : "Needs reconnect"}</Badge>
+                    </div>
+                    <div className="ka-mono" style={{ color: "var(--fg-2)", fontSize: 12 }}>GSTIN {s.gstin} · {s.state}</div>
+                  </div>
+                  <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="settings" size={12}/></button>
+                </div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 1, background: "var(--border-subtle)" }}>
+                  <div style={{ padding: "12px 16px", background: "var(--bg-surface)" }}>
+                    <div style={{ font: "500 10px/1 var(--font-sans)", color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Last pull</div>
+                    <div style={{ font: "600 12.5px/1 var(--font-mono)" }}>{s.lastPull}</div>
+                  </div>
+                  <div style={{ padding: "12px 16px", background: "var(--bg-surface)" }}>
+                    <div style={{ font: "500 10px/1 var(--font-sans)", color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>Invoices · month</div>
+                    <div style={{ font: "600 12.5px/1 var(--font-mono)" }}>{s.invMonth}</div>
+                  </div>
+                  <div style={{ padding: "12px 16px", background: "var(--bg-surface)" }}>
+                    <div style={{ font: "500 10px/1 var(--font-sans)", color: "var(--fg-3)", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 5 }}>OTP session</div>
+                    <Badge kind={otpKind} dot style={{ fontSize: 10 }}>{s.otp}</Badge>
+                  </div>
+                  <div style={{ padding: "12px 16px", background: "var(--bg-surface)", display: "flex", alignItems: "center", justifyContent: "flex-end" }}>
+                    {s.health === "ok"
+                      ? <button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="refresh" size={12}/> Sync now</button>
+                      : <button className="ka-btn ka-btn-primary ka-btn-sm"><Icon name="key" size={12}/> Reconnect OTP</button>
+                    }
+                  </div>
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenDashboard, ScreenInbox, ScreenOCR, ScreenSources });
+/* Kraya AP — Match & verify screens
+   5. Invoice detail   — single fetched/parsed invoice, all fields
+   6. PO ↔ Invoice match — side-by-side line items per vendor GSTIN
+   7. 3-way match      — PO ↔ Invoice ↔ GRN with diffs flagged
+*/
+
+/* ────────────────────────────────────────────────────────────────────────
+   05 · Invoice detail (parsed)
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenInvoiceDetail() {
+  const inv = INBOX[0]; // INV-2026-00428 · Bharat Steel
+  const lineTotal = INV_LINES.reduce((s, l) => s + l.qty * l.rate, 0);
+  const gst = Math.round(lineTotal * 0.18);
+
+  return (
+    <div className="ka ka-app">
+      <AppTopbar/>
+      <Sidebar active="inbox"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Inbox", inv.id]}
+          title={inv.id}
+          sub={<>Bharat Steel Co. · IRN <span className="ka-mono">8a3f…7d2c</span> · acknowledged 26 May 2026 by NIC IRP</>}
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="download" size={13}/> PDF</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="split"    size={13}/> Open match</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="arrow"    size={13}/> Send to 3-way</button>
+            </>
+          }
+        />
+
+        <div style={{ marginBottom: 18 }}>
+          <Steps items={[
+            { label: "Captured · GST API", state: "done" },
+            { label: "PO link · auto",     state: "done" },
+            { label: "GRN match",          state: "live" },
+            { label: "3-way verify",       state: "todo" },
+            { label: "Payable",            state: "todo" },
+          ]}/>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16, marginBottom: 16 }}>
+          {/* Header card */}
+          <Card noBody>
+            <div style={{ padding: "18px 22px", borderBottom: "1px solid var(--border-subtle)",
+                          display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 24 }}>
+              <div>
+                <div style={{ font: "600 10.5px/1 var(--font-sans)", letterSpacing: "0.12em",
+                              textTransform: "uppercase", color: "var(--kraya-red)", marginBottom: 8 }}>Tax invoice</div>
+                <div style={{ font: "700 22px/1.1 var(--font-sans)", letterSpacing: "-0.02em" }}>Bharat Steel Co.</div>
+                <div className="ka-mono" style={{ color: "var(--fg-3)", marginTop: 4 }}>GSTIN 27AABCB2891C1ZP · Pune, MH</div>
+              </div>
+              <div style={{ textAlign: "right" }}>
+                <SourceTag source="api"/>
+                <div style={{ font: "600 22px/1 var(--font-sans)", marginTop: 12, letterSpacing: "-0.01em" }}>{fmtINR(inv.amount)}</div>
+                <div style={{ font: "500 11px/1 var(--font-mono)", color: "var(--fg-3)", marginTop: 4 }}>incl. CGST + SGST @ 18%</div>
+              </div>
+            </div>
+
+            <div style={{ padding: "16px 22px", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px 24px" }}>
+              <dl className="ka-kv">
+                <dt>Invoice #</dt>     <dd className="mono">{inv.id}</dd>
+                <dt>IRN</dt>           <dd className="mono">8a3f5e6c-1a44-49b9-bb12-9fa207d2c</dd>
+                <dt>Invoice date</dt>  <dd>26 May 2026</dd>
+                <dt>Place of supply</dt><dd>Maharashtra (27)</dd>
+                <dt>PO ref</dt>        <dd className="mono">PO-26-0418, PO-26-0421, PO-26-0425</dd>
+                <dt>E-way bill</dt>    <dd className="mono">EWB-271-9482</dd>
+              </dl>
+              <dl className="ka-kv">
+                <dt>Bill from</dt>     <dd>Bharat Steel Co.<br/><span style={{ font: "500 11px/1.4 var(--font-mono)", color: "var(--fg-3)" }}>Plot 14, MIDC Bhosari, Pune 411026</span></dd>
+                <dt>Bill to</dt>       <dd>{BUYER_ORG.name}<br/><span style={{ font: "500 11px/1.4 var(--font-mono)", color: "var(--fg-3)" }}>{BUYER_ORG.branch} · {BUYER_ORG.state}</span></dd>
+                <dt>Ship to</dt>       <dd>Same as bill to</dd>
+                <dt>Payment terms</dt> <dd>Net 30 days · TDS @ 2%</dd>
+              </dl>
+            </div>
+          </Card>
+
+          {/* Compliance side card */}
+          <Card title="Compliance checks" meta="Auto"
+                action={<Badge kind="ok" dot>5 of 6 pass</Badge>}>
+            {[
+              { lbl: "GSTIN active on portal",       state: "ok"   },
+              { lbl: "IRN signed by NIC IRP",        state: "ok"   },
+              { lbl: "HSN codes valid",              state: "ok"   },
+              { lbl: "Place of supply consistent",   state: "ok"   },
+              { lbl: "Vendor not on TDS-exempt list",state: "ok"   },
+              { lbl: "E-way bill linked &amp; live", state: "warn", note: "in-transit · 62%" },
+            ].map((c, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "7px 0",
+                                    borderBottom: i < 5 ? "1px solid var(--border-subtle)" : "none" }}>
+                <Icon name={c.state === "ok" ? "check-c" : c.state === "warn" ? "alert" : "x-c"} size={16}
+                  stroke={2} />
+                <span style={{ flex: 1, font: "500 12.5px/1.3 var(--font-sans)" }} dangerouslySetInnerHTML={{ __html: c.lbl }}/>
+                {c.note && <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>{c.note}</span>}
+              </div>
+            ))}
+          </Card>
+        </div>
+
+        {/* Line items */}
+        <Card title="Line items" meta={`${INV_LINES.length} items · auto-parsed from GST e-invoice payload`}
+              action={<button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="split" size={12}/> Match to POs</button>}>
+          <table className="ka-tbl compact">
+            <thead><tr>
+              <th>#</th><th>Item</th><th>Description</th><th>HSN</th><th className="num">GST %</th>
+              <th className="num">Qty</th><th className="num">Rate</th><th className="num">Taxable</th><th className="num">Tax</th><th className="num">Total</th>
+            </tr></thead>
+            <tbody>
+              {INV_LINES.map((l, i) => {
+                const taxable = l.qty * l.rate;
+                const tax = Math.round(taxable * l.gst / 100);
+                return (
+                  <tr key={i}>
+                    <td>{l.sr}</td>
+                    <td style={{ fontWeight: 600 }}>{l.item}</td>
+                    <td style={{ color: "var(--fg-2)" }}>{l.desc}</td>
+                    <td className="ka-mono">{l.hsn}</td>
+                    <td className="num">{l.gst}%</td>
+                    <td className="num">{fmtN(l.qty)}</td>
+                    <td className="num">{fmtAmt(l.rate)}</td>
+                    <td className="num">{fmtAmt(taxable)}</td>
+                    <td className="num">{fmtAmt(tax)}</td>
+                    <td className="num" style={{ fontWeight: 600 }}>{fmtAmt(taxable + tax)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{ background: "var(--bg-canvas)" }}>
+                <td colSpan={5} style={{ padding: "10px 12px", font: "600 11px/1 var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-3)" }}>Totals</td>
+                <td className="num" style={{ padding: "10px 12px", fontWeight: 600 }}>—</td>
+                <td className="num" style={{ padding: "10px 12px" }}>—</td>
+                <td className="num" style={{ padding: "10px 12px", fontWeight: 600 }}>{fmtAmt(lineTotal)}</td>
+                <td className="num" style={{ padding: "10px 12px", fontWeight: 600 }}>{fmtAmt(gst)}</td>
+                <td className="num" style={{ padding: "10px 12px", fontWeight: 700 }}>{fmtAmt(lineTotal + gst)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   06 · PO ↔ Invoice match · side-by-side
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenPOMatch() {
+  // Match guesses per line:
+  //   pp = exact PO+inv match
+  //   warn = qty/rate diff
+  //   none = unmatched (no PO link)
+  // 7 invoice lines but only 6 PO lines (line 7 freight is unmatched)
+  const links = ["ok","ok","warn","ok","ok","warn","none"]; // by inv-line index
+  return (
+    <div className="ka ka-app">
+      <AppTopbar role="Purchase" roleStyle="purchase" initials="RK"/>
+      <Sidebar active="po-match"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Match", "PO ↔ Invoice"]}
+          title="PO ↔ Invoice match"
+          sub="Per vendor GSTIN, Kraya places your open PO line items beside the line items pulled from the vendor's e-invoice. The matcher pre-links what it can; you confirm or correct."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="list" size={13}/> View as table</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="refresh" size={13}/> Re-run match</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="check" size={13}/> Confirm &amp; send to GRN</button>
+            </>
+          }
+        />
+
+        {/* Vendor strip */}
+        <div className="ka-vendor-strip">
+          <span className="ka-av" style={{ width: 38, height: 38, fontSize: 13, background: "var(--kraya-ink)", color: "white" }}>BS</span>
+          <div>
+            <div className="name">Bharat Steel Co.</div>
+            <div className="gst">GSTIN 27AABCB2891C1ZP · Pune, Maharashtra</div>
+          </div>
+          <div className="summary">
+            <div className="item"><span className="k">Open POs</span><span className="v">3</span></div>
+            <div className="item"><span className="k">PO value</span><span className="v">₹ 14,28,400</span></div>
+            <div className="item"><span className="k">Invoice</span><span className="v ka-mono">INV-2026-00428</span></div>
+            <div className="item"><span className="k">Invoice value</span><span className="v">₹ 12,48,400</span></div>
+            <div className="item"><span className="k">Auto-match</span><span className="v" style={{ color: "var(--ap-ok)" }}>4 / 6 lines</span></div>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+          <div className="ka-pills">
+            <div className="ka-pill active">Only this invoice</div>
+            <div className="ka-pill">All open POs · this vendor</div>
+            <div className="ka-pill">Show closed POs</div>
+          </div>
+          <div className="ka-hint">
+            <Icon name="info" size={13}/>
+            Drag a PO row onto an invoice row to link manually · click the spine arrow to break a link
+          </div>
+        </div>
+
+        {/* Side-by-side match grid */}
+        <div className="ka-match-grid">
+          {/* LEFT — Pending PO lines */}
+          <div className="ka-match-col left">
+            <div className="ka-col-h">
+              <span className="ttl">Pending PO line items <span style={{ color: "var(--fg-3)", marginLeft: 6, fontWeight: 500 }}>· 6 open</span></span>
+              <span className="src-tag api" style={{ background: "var(--bg-subtle)", color: "var(--fg-2)" }}><Icon name="doc" size={10} stroke={2.2}/> Kraya PO ledger</span>
+            </div>
+            <table className="ka-tbl compact">
+              <thead><tr>
+                <th>#</th><th>PO</th><th>Item</th><th>HSN</th>
+                <th className="num">GST</th><th className="num">Qty</th><th className="num">Rate</th>
+              </tr></thead>
+              <tbody>
+                {PO_LINES.map((p, i) => (
+                  <tr key={i}>
+                    <td>{p.sr}</td>
+                    <td className="ka-mono">{p.po}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{p.item}</div>
+                      <div className="sub">{p.desc}</div>
+                    </td>
+                    <td className="ka-mono">{p.hsn}</td>
+                    <td className="num">{p.gst}%</td>
+                    <td className="num">{fmtN(p.qty)} <span style={{ color: "var(--fg-3)" }}>{p.uom}</span></td>
+                    <td className="num">{fmtAmt(p.rate)}</td>
+                  </tr>
+                ))}
+                <tr style={{ background: "var(--bg-canvas)" }}>
+                  <td colSpan={7} style={{ textAlign: "center", color: "var(--fg-3)", font: "500 11px/1.3 var(--font-mono)", padding: "14px 12px" }}>
+                    — no unmatched PO lines remain for this vendor —
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* MIDDLE — link spine */}
+          <div className="ka-match-spine">
+            <div className="spine-h"/>
+            {links.map((s, i) => (
+              <div key={i} className={`link ${s === "ok" ? "" : s === "warn" ? "warn" : s === "bad" ? "bad" : "none"}`}>
+                {s === "ok"   && <Icon name="arrow" size={14} stroke={2}/>}
+                {s === "warn" && <Icon name="alert" size={14} stroke={2}/>}
+                {s === "none" && <span style={{ font: "600 9px/1 var(--font-mono)", color: "var(--fg-3)" }}>NEW</span>}
+              </div>
+            ))}
+            <div style={{ background: "var(--bg-canvas)", padding: "12px 6px", borderTop: "1px solid var(--border-subtle)" }}></div>
+          </div>
+
+          {/* RIGHT — Invoice lines */}
+          <div className="ka-match-col right">
+            <div className="ka-col-h">
+              <span className="ttl">E-invoice line items <span style={{ color: "var(--fg-3)", marginLeft: 6, fontWeight: 500 }}>· INV-2026-00428</span></span>
+              <SourceTag source="api"/>
+            </div>
+            <table className="ka-tbl compact">
+              <thead><tr>
+                <th>#</th><th>Inv</th><th>Item</th><th>HSN</th>
+                <th className="num">GST</th><th className="num">Qty</th><th className="num">Rate</th>
+              </tr></thead>
+              <tbody>
+                {INV_LINES.map((l, i) => {
+                  const state = links[i];
+                  const rowCls = state === "warn" ? "row-warn" : state === "none" ? "row-bad" : "";
+                  const po = PO_LINES[i];
+                  const qtyDiff = po ? l.qty - po.qty : 0;
+                  const rateDiff = po ? l.rate - po.rate : 0;
+                  return (
+                    <tr key={i} className={rowCls}>
+                      <td>{l.sr}</td>
+                      <td className="ka-mono">{l.inv.replace("INV-", "")}</td>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{l.item}</div>
+                        <div className="sub">{l.desc}</div>
+                      </td>
+                      <td className="ka-mono">{l.hsn}</td>
+                      <td className="num">{l.gst}%</td>
+                      <td className="num">
+                        {fmtN(l.qty)}
+                        {qtyDiff !== 0 && <div><Diff kind="warn">{qtyDiff > 0 ? "+" : ""}{qtyDiff}</Diff></div>}
+                      </td>
+                      <td className="num">
+                        {fmtAmt(l.rate)}
+                        {rateDiff !== 0 && <div><Diff kind="warn">{rateDiff > 0 ? "+" : ""}{fmtAmt(rateDiff)}</Diff></div>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Summary */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 14, marginTop: 18 }}>
+          <Card noBody>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ font: "500 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Exact match</div>
+              <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.01em", color: "var(--ap-ok)" }}>4 lines</div>
+            </div>
+          </Card>
+          <Card noBody>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ font: "500 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Match · qty / rate diff</div>
+              <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.01em", color: "var(--ap-warn)" }}>2 lines</div>
+              <div style={{ font: "500 11px/1.4 var(--font-mono)", color: "var(--fg-3)", marginTop: 4 }}>GI Pipe rate +6, Hex Nut qty +20</div>
+            </div>
+          </Card>
+          <Card noBody>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ font: "500 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 6 }}>Unmatched · invoice extra</div>
+              <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.01em", color: "var(--ap-bad)" }}>1 line</div>
+              <div style={{ font: "500 11px/1.4 var(--font-mono)", color: "var(--fg-3)", marginTop: 4 }}>Freight ₹ 4,800 · approve as new</div>
+            </div>
+          </Card>
+          <Card noBody style={{ background: "var(--kraya-ink)", borderColor: "var(--kraya-ink-2)", color: "white" }}>
+            <div style={{ padding: "14px 18px" }}>
+              <div style={{ font: "500 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 6 }}>Match confidence</div>
+              <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.01em" }}>92%</div>
+              <div style={{ font: "500 11px/1.4 var(--font-mono)", color: "rgba(255,255,255,0.55)", marginTop: 4 }}>2 lines need a quick decision</div>
+            </div>
+          </Card>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   07 · 3-way match (PO + Invoice + GRN)
+   ──────────────────────────────────────────────────────────────────────── */
+function Screen3Way() {
+  // We compose by item, joining PO + Invoice + GRN where they exist
+  // GRN_LINES indices follow PO order; INV_LINES item-7 is the unmatched freight
+  const rows = PO_LINES.map((p, i) => ({
+    po: p,
+    inv: INV_LINES[i] || null,
+    grn: GRN_LINES[i] || null,
+  }));
+  // Append freight row (no PO, no GRN)
+  rows.push({ po: null, inv: INV_LINES[6], grn: null });
+
+  function cellState({ po, inv, grn }, field) {
+    if (!po || !inv) return "none";
+    if (field === "qty") {
+      if (!grn) return "warn";
+      if (inv.qty === po.qty && grn.recvQty === po.qty) return "ok";
+      return inv.qty !== po.qty || grn.recvQty !== po.qty ? "warn" : "ok";
+    }
+    if (field === "rate") {
+      return inv.rate === po.rate ? "ok" : "warn";
+    }
+    return "ok";
+  }
+
+  return (
+    <div className="ka ka-app">
+      <AppTopbar role="Accounts" roleStyle="accounts"/>
+      <Sidebar active="threeway"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Match", "3-way verification"]}
+          title="3-way match · PO + Invoice + GRN"
+          sub="The accounts team's verification view. Each item shows PO (purchase), Invoice (vendor) and GRN (stores receipt) side-by-side. Diffs in qty, rate, HSN and GST are flagged automatically — three matching rows turn the row green and the line is cleared for payable."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="download" size={13}/> Audit trail</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="x" size={13}/> Reject invoice</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="wallet" size={13}/> Establish payable</button>
+            </>
+          }
+        />
+
+        <div className="ka-vendor-strip">
+          <span className="ka-av" style={{ width: 38, height: 38, fontSize: 13, background: "var(--kraya-ink)", color: "white" }}>BS</span>
+          <div>
+            <div className="name">Bharat Steel Co. · INV-2026-00428</div>
+            <div className="gst">GSTIN 27AABCB2891C1ZP · 3 POs · 3 GRNs · Stores cleared on 26 May</div>
+          </div>
+          <div className="summary">
+            <div className="item"><span className="k">PO value</span><span className="v ka-mono">₹ 12,06,800</span></div>
+            <div className="item"><span className="k">Invoice value</span><span className="v ka-mono">₹ 12,48,400</span></div>
+            <div className="item"><span className="k">GRN value</span><span className="v ka-mono">₹ 11,99,304</span></div>
+            <div className="item"><span className="k">Payable (post-diff)</span><span className="v" style={{ color: "var(--kraya-red)" }}>₹ 12,15,600</span></div>
+          </div>
+        </div>
+
+        {/* Triple column body */}
+        <div className="ka-tri">
+          <div className="ka-tri-col">
+            <div className="ka-col-h">
+              <span className="ttl">Purchase Order</span>
+              <span className="src-tag" style={{ background: "var(--bg-subtle)", color: "var(--fg-2)", padding: "3px 8px", borderRadius: 4, font: "600 9.5px/1 var(--font-sans)", letterSpacing: "0.04em" }}><Icon name="doc" size={10} stroke={2.2}/> PO ledger</span>
+            </div>
+          </div>
+          <div className="ka-tri-col">
+            <div className="ka-col-h">
+              <span className="ttl">E-invoice (vendor)</span>
+              <SourceTag source="api"/>
+            </div>
+          </div>
+          <div className="ka-tri-col">
+            <div className="ka-col-h">
+              <span className="ttl">GRN (stores)</span>
+              <span className="src-tag" style={{ background: "var(--ap-info-bg)", color: "var(--ap-info)", padding: "3px 8px", borderRadius: 4, font: "600 9.5px/1 var(--font-sans)", letterSpacing: "0.04em" }}><Icon name="warehouse" size={10} stroke={2.2}/> Stores entry</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Item rows */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
+          {rows.map((r, i) => {
+            const overall =
+              (!r.po || !r.inv || !r.grn) ? "warn" :
+              (r.inv.qty === r.po.qty && r.grn.recvQty === r.po.qty && r.inv.rate === r.po.rate) ? "ok" : "warn";
+            const bgFor = overall === "ok"   ? "rgba(46,125,91,0.04)" :
+                          overall === "warn" ? "rgba(181,115,26,0.05)" :
+                                                "rgba(192,57,43,0.05)";
+            return (
+              <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr",
+                                    border: "1px solid var(--border-subtle)", borderRadius: 10,
+                                    overflow: "hidden", background: bgFor }}>
+                {/* PO cell */}
+                <div style={{ padding: "12px 14px", borderRight: "1px solid var(--border-subtle)", background: "var(--bg-surface)" }}>
+                  {r.po ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>{r.po.po}</span>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>HSN {r.po.hsn}</span>
+                      </div>
+                      <div style={{ font: "600 13px/1.3 var(--font-sans)", marginBottom: 3 }}>{r.po.item}</div>
+                      <div style={{ font: "400 11px/1.3 var(--font-sans)", color: "var(--fg-3)", marginBottom: 8 }}>{r.po.desc}</div>
+                      <div style={{ display: "flex", gap: 12, font: "500 12px/1 var(--font-mono)" }}>
+                        <span><span style={{ color: "var(--fg-3)" }}>Qty</span> &nbsp;{fmtN(r.po.qty)} {r.po.uom}</span>
+                        <span><span style={{ color: "var(--fg-3)" }}>Rate</span> &nbsp;{fmtAmt(r.po.rate)}</span>
+                        <span><span style={{ color: "var(--fg-3)" }}>GST</span> &nbsp;{r.po.gst}%</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: "grid", placeItems: "center", height: "100%", padding: "20px 0",
+                                  color: "var(--fg-3)", font: "500 12px/1.3 var(--font-mono)", textAlign: "center" }}>
+                      — no PO line · invoice extra —
+                    </div>
+                  )}
+                </div>
+
+                {/* Invoice cell */}
+                <div style={{ padding: "12px 14px", borderRight: "1px solid var(--border-subtle)", background: "var(--bg-surface)" }}>
+                  {r.inv ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>Inv line {r.inv.sr}</span>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>HSN {r.inv.hsn}</span>
+                      </div>
+                      <div style={{ font: "600 13px/1.3 var(--font-sans)", marginBottom: 3 }}>{r.inv.item}</div>
+                      <div style={{ font: "400 11px/1.3 var(--font-sans)", color: "var(--fg-3)", marginBottom: 8 }}>{r.inv.desc}</div>
+                      <div style={{ display: "flex", gap: 12, font: "500 12px/1 var(--font-mono)", flexWrap: "wrap" }}>
+                        <span><span style={{ color: "var(--fg-3)" }}>Qty</span> &nbsp;{fmtN(r.inv.qty)}
+                          {r.po && r.inv.qty !== r.po.qty && (
+                            <span style={{ marginLeft: 5 }}><Diff kind="warn">{r.inv.qty > r.po.qty ? "+" : ""}{r.inv.qty - r.po.qty}</Diff></span>
+                          )}
+                        </span>
+                        <span><span style={{ color: "var(--fg-3)" }}>Rate</span> &nbsp;{fmtAmt(r.inv.rate)}
+                          {r.po && r.inv.rate !== r.po.rate && (
+                            <span style={{ marginLeft: 5 }}><Diff kind="warn">{r.inv.rate > r.po.rate ? "+" : ""}{fmtAmt(r.inv.rate - r.po.rate)}</Diff></span>
+                          )}
+                        </span>
+                        <span><span style={{ color: "var(--fg-3)" }}>GST</span> &nbsp;{r.inv.gst}%</span>
+                      </div>
+                    </>
+                  ) : <div style={{ height: 80 }}/>}
+                </div>
+
+                {/* GRN cell */}
+                <div style={{ padding: "12px 14px", background: "var(--bg-surface)" }}>
+                  {r.grn ? (
+                    <>
+                      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>{r.grn.grn}</span>
+                        <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>{r.grn.date}</span>
+                      </div>
+                      <div style={{ font: "600 13px/1.3 var(--font-sans)", marginBottom: 3 }}>{r.grn.item}</div>
+                      <div style={{ font: "400 11px/1.3 var(--font-sans)", color: "var(--fg-3)", marginBottom: 8 }}>
+                        Stores remark · {r.grn.remarks}
+                      </div>
+                      <div style={{ display: "flex", gap: 12, font: "500 12px/1 var(--font-mono)" }}>
+                        <span><span style={{ color: "var(--fg-3)" }}>Received</span> &nbsp;{fmtN(r.grn.recvQty)}
+                          {r.po && r.grn.recvQty !== r.po.qty && (
+                            <span style={{ marginLeft: 5 }}><Diff kind="bad">{r.grn.recvQty > r.po.qty ? "+" : ""}{r.grn.recvQty - r.po.qty}</Diff></span>
+                          )}
+                        </span>
+                        <span style={{ marginLeft: "auto" }}>
+                          {overall === "ok"   ? <Badge kind="ok"   dot>3-way OK</Badge> :
+                           overall === "warn" ? <Badge kind="warn" dot>Review</Badge>  :
+                                                <Badge kind="bad"  dot>Hold</Badge>}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div style={{ display: "grid", placeItems: "center", height: "100%", padding: "20px 0", color: "var(--fg-3)" }}>
+                      <div style={{ font: "500 12px/1.3 var(--font-mono)", textAlign: "center" }}>
+                        — no GRN required —<br/>
+                        <span style={{ color: "var(--ap-warn)" }}>service / freight line</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Verifier signoffs */}
+        <div style={{ marginTop: 22, display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14 }}>
+          {[
+            { team: "Stores",   who: "Sandeep K.",  initials: "SK", state: "ok",   note: "All GRNs recorded · 1 line short by 2 pcs (MS Angle)" },
+            { team: "Purchase", who: "Rohit S.",    initials: "RS", state: "ok",   note: "Linked to PO-26-0418, 0421, 0425 · approved diffs" },
+            { team: "Accounts", who: "Asha M.",     initials: "AM", state: "live", note: "Compliance checks pass · ready to release" },
+          ].map((s, i) => (
+            <div key={i} className="ka-card" style={{ padding: "14px 16px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <span className="ka-av">{s.initials}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ font: "600 9.5px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)" }}>{s.team} team</div>
+                  <div style={{ font: "600 13px/1.2 var(--font-sans)", marginTop: 3 }}>{s.who}</div>
+                </div>
+                {s.state === "ok"
+                  ? <Badge kind="ok" dot>Signed off</Badge>
+                  : <Badge kind="brand" dot>You</Badge>}
+              </div>
+              <div style={{ font: "400 11.5px/1.45 var(--font-sans)", color: "var(--fg-2)", marginTop: 10 }}>{s.note}</div>
+            </div>
+          ))}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenInvoiceDetail, ScreenPOMatch, Screen3Way });
+/* Kraya AP — Payables screens
+   8. GRN (stores team)   — receive material against open POs
+   9. AP register         — verified, ready-to-pay queue
+  10. E-way bill tracker  — track in-transit consignments
+*/
+
+/* ────────────────────────────────────────────────────────────────────────
+   08 · GRN · stores team view
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenGRN() {
+  const expecting = [
+    { po: "PO-26-0418", vendor: "Bharat Steel Co.",   item: "HSS Cutting Disc 12in",   hsn: "8202",  ord:  20, recv: 20, uom: "box",  rate: 3120,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "received" },
+    { po: "PO-26-0418", vendor: "Bharat Steel Co.",   item: "M8 304L Hex Bolt",        hsn: "7318",  ord: 200, recv: 200,uom: "pc",   rate:   14,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "received" },
+    { po: "PO-26-0421", vendor: "Bharat Steel Co.",   item: "GI Pipe 25mm Class B",    hsn: "7306",  ord: 120, recv: 120,uom: "m",    rate:  142,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "received" },
+    { po: "PO-26-0421", vendor: "Bharat Steel Co.",   item: "MS Angle 50×50×6",        hsn: "7216",  ord:  80, recv:  78,uom: "pc",   rate:  188,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "short"    },
+    { po: "PO-26-0425", vendor: "Bharat Steel Co.",   item: "Welding Rod E7018",       hsn: "8311",  ord:  40, recv:  40,uom: "pack", rate:  620,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "received" },
+    { po: "PO-26-0425", vendor: "Bharat Steel Co.",   item: "Hex Nut M12 Galvanized",  hsn: "7318",  ord: 500, recv: 500,uom: "pc",   rate:    8,  ewb: "EWB-271-9482", eta: "Today, 14:00", status: "received" },
+    { po: "PO-26-0432", vendor: "OM Bearings",        item: "6205-2RS Bearing",        hsn: "8482",  ord: 200, recv:   0,uom: "pc",   rate:  920,  ewb: "EWB-271-9481", eta: "Tomorrow",     status: "in-transit" },
+    { po: "PO-26-0432", vendor: "OM Bearings",        item: "6204 Bearing",            hsn: "8482",  ord: 120, recv:   0,uom: "pc",   rate:  460,  ewb: "EWB-271-9481", eta: "Tomorrow",     status: "in-transit" },
+    { po: "PO-26-0414", vendor: "Tata Components",    item: "MNX-32 Contactor 32A",    hsn: "8536",  ord:  40, recv:   0,uom: "pc",   rate: 1480,  ewb: "EWB-271-9475", eta: "Awaited",      status: "pending"  },
+  ];
+
+  const STSTYLE = {
+    "received":    { kind: "ok",   txt: "Received in full" },
+    "short":       { kind: "warn", txt: "Short receipt" },
+    "in-transit":  { kind: "info", txt: "In transit" },
+    "pending":     { kind: "mute", txt: "Pending" },
+  };
+
+  return (
+    <div className="ka ka-app">
+      <AppTopbar role="Stores" roleStyle="stores" initials="SK" business="Plant 03 · Stores" gstin="Gate 4 · Receiving"/>
+      <Sidebar active="grn"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Match & verify", "GRN · stores"]}
+          title="Goods Receipt Notes"
+          sub="The stores team records received quantities against open POs. Vehicle arrivals are pre-loaded from the linked e-way bills, so when the truck rolls in you only confirm what was actually received and any short / damaged remarks."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="barcode" size={13}/> Scan PO / e-way</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="upload" size={13}/> Upload photo</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="check" size={13}/> Confirm GRN</button>
+            </>
+          }
+        />
+
+        <div className="ka-stats cols-5" style={{ marginBottom: 18 }}>
+          <Stat label="Trucks at gate"  value="2"   sub="Bharat Steel, Pragati"/>
+          <Stat label="In transit"      value="3"   sub="next 24h"/>
+          <Stat label="Received today"  value="142" unit="pcs" sub="6 GRNs raised"/>
+          <Stat label="Short / damaged" value="1"   sub="MS Angle · 2 pcs"/>
+          <Stat brand label="Open POs · pending receipt" value="38" sub="₹ 18.4 L total" currency="₹"/>
+        </div>
+
+        {/* Vehicles at gate */}
+        <Card title="Vehicles at gate · live" meta="Gate 4 receiving"
+              action={<a href="#" className="ka-btn ka-btn-ghost ka-btn-sm">Gate log <Icon name="chev-r" size={12}/></a>}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 14 }}>
+            {[
+              { veh: "MH-12-AB-3421", driver: "Vikram T.",  vendor: "Bharat Steel Co.", ewb: "EWB-271-9482", since: "13:42", state: "live", invoice: "INV-2026-00428", val: "₹ 12,48,400" },
+              { veh: "MH-15-CD-8821", driver: "Manoj P.",   vendor: "Pragati Engg",     ewb: "EWB-271-9479", since: "12:18", state: "live", invoice: "INV-2026-00425", val: "₹ 1,68,200"  },
+            ].map((v, i) => (
+              <div key={i} style={{ border: "1px solid var(--border-subtle)", borderRadius: 10, padding: 14,
+                                    display: "grid", gridTemplateColumns: "auto 1fr auto", gap: 14, alignItems: "center" }}>
+                <div style={{ width: 48, height: 48, borderRadius: 10, background: "var(--kraya-red-soft)",
+                              display: "grid", placeItems: "center", color: "var(--kraya-red)" }}>
+                  <Icon name="truck" size={22} stroke={2}/>
+                </div>
+                <div>
+                  <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 4 }}>
+                    <span className="ka-mono" style={{ fontWeight: 600, fontSize: 13 }}>{v.veh}</span>
+                    <Badge kind="brand" dot>At gate · since {v.since}</Badge>
+                  </div>
+                  <div style={{ font: "500 12px/1.4 var(--font-sans)", color: "var(--fg-2)" }}>
+                    {v.vendor} · {v.driver} · <span className="ka-mono">{v.ewb}</span>
+                  </div>
+                  <div className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11, marginTop: 4 }}>
+                    {v.invoice} · {v.val}
+                  </div>
+                </div>
+                <button className="ka-btn ka-btn-dark ka-btn-sm">Start GRN <Icon name="arrow" size={12}/></button>
+              </div>
+            ))}
+          </div>
+        </Card>
+
+        <div style={{ height: 16 }}/>
+
+        {/* Items to receive */}
+        <Card title="Items expected · today" meta="Filtered to vendor: Bharat Steel Co."
+              action={
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button className="ka-btn ka-btn-ghost ka-btn-sm"><Icon name="filter" size={12}/></button>
+                  <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="download" size={12}/></button>
+                </div>
+              }>
+          <table className="ka-tbl">
+            <thead><tr>
+              <th>PO</th><th>Item</th><th>HSN</th><th>E-way</th><th>ETA</th>
+              <th className="num">Ord. qty</th><th className="num">Recv. qty</th>
+              <th>Status</th><th>Remarks</th><th style={{ width: 130 }}></th>
+            </tr></thead>
+            <tbody>
+              {expecting.map((r, i) => {
+                const s = STSTYLE[r.status];
+                const rowCls = r.status === "short" ? "row-warn" : r.status === "received" ? "" : "";
+                return (
+                  <tr key={i} className={rowCls}>
+                    <td className="ka-mono">{r.po}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{r.item}</div>
+                      <div className="sub">{r.vendor}</div>
+                    </td>
+                    <td className="ka-mono">{r.hsn}</td>
+                    <td className="ka-mono" style={{ color: "var(--fg-2)" }}>{r.ewb}</td>
+                    <td className="ka-mono" style={{ color: "var(--fg-2)" }}>{r.eta}</td>
+                    <td className="num">{fmtN(r.ord)} <span style={{ color: "var(--fg-3)" }}>{r.uom}</span></td>
+                    <td className="num">
+                      {r.status === "received" || r.status === "short" ? (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontWeight: 600 }}>{fmtN(r.recv)}</span>
+                          {r.status === "short" && <Diff kind="bad">{r.recv - r.ord}</Diff>}
+                        </span>
+                      ) : (
+                        <input style={{ width: 76, padding: "5px 8px", border: "1px solid var(--border-default)",
+                                        borderRadius: 5, font: "500 12px/1 var(--font-mono)", textAlign: "right",
+                                        background: "var(--bg-surface)" }} placeholder="—"/>
+                      )}
+                    </td>
+                    <td><Badge kind={s.kind} dot>{s.txt}</Badge></td>
+                    <td style={{ color: "var(--fg-2)", fontSize: 11.5 }}>
+                      {r.status === "short" && "2 pcs damaged in transit"}
+                      {r.status === "received" && "—"}
+                      {r.status === "in-transit" && "ETA tomorrow 10:00"}
+                      {r.status === "pending" && "Vehicle not assigned"}
+                    </td>
+                    <td>
+                      {r.status === "in-transit" || r.status === "pending"
+                        ? <button className="ka-btn ka-btn-outline ka-btn-sm" disabled>Awaiting</button>
+                        : <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="open" size={11}/> Open GRN</button>}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   09 · AP register · ready to pay
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenRegister() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar role="Accounts" roleStyle="accounts" initials="AM"/>
+      <Sidebar active="register"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Payables", "AP register"]}
+          title="Accounts Payable register"
+          sub="Every 3-way matched invoice lands here as an established payable. Schedule a payment run, hold on a vendor, or release a single invoice — the audit trail follows the document end-to-end."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="filter"   size={13}/> Filter</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="download" size={13}/> Export CSV</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="send"     size={13}/> Schedule payment run</button>
+            </>
+          }
+        />
+
+        <div className="ka-stats cols-5" style={{ marginBottom: 18 }}>
+          <Stat label="Ready to pay"    value="16"  sub="₹ 24.8 L"/>
+          <Stat label="Overdue"         value="3"   sub="₹ 4.62 L · 6 days"/>
+          <Stat label="Due this week"   value="7"   sub="₹ 12.4 L"/>
+          <Stat label="On hold"         value="2"   sub="quality NCR / HSN"/>
+          <Stat brand label="Next payment run" value="Today" unit="16:00" sub="₹ 8.92 L · 4 invoices"/>
+        </div>
+
+        {/* Payment run preview */}
+        <Card title="Today's payment run · 16:00 IST" meta="Auto-generated · awaiting Director sign-off"
+              action={
+                <div style={{ display: "flex", gap: 6 }}>
+                  <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="lock" size={12}/> Lock</button>
+                  <button className="ka-btn ka-btn-primary ka-btn-sm"><Icon name="shield" size={12}/> Approve &amp; release</button>
+                </div>
+              }>
+            <div style={{ display: "grid", gridTemplateColumns: "1.3fr 1fr 1fr", gap: 0,
+                          border: "1px solid var(--border-subtle)", borderRadius: 8, overflow: "hidden", marginBottom: 14 }}>
+              <div style={{ padding: 16, borderRight: "1px solid var(--border-subtle)", background: "var(--kraya-ink)", color: "white" }}>
+                <div style={{ font: "600 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.6)", marginBottom: 8 }}>Run total · 4 invoices</div>
+                <div style={{ font: "700 32px/1 var(--font-sans)", letterSpacing: "-0.02em" }}>₹ 8,92,400</div>
+                <div style={{ font: "500 11px/1.4 var(--font-mono)", color: "rgba(255,255,255,0.55)", marginTop: 6 }}>NEFT · 3 vendors · TDS deducted</div>
+              </div>
+              <div style={{ padding: 16, borderRight: "1px solid var(--border-subtle)" }}>
+                <div style={{ font: "600 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 8 }}>Cash impact</div>
+                <div style={{ font: "700 22px/1 var(--font-sans)", letterSpacing: "-0.02em" }}>₹ 8,74,752</div>
+                <div style={{ font: "500 11px/1.4 var(--font-mono)", color: "var(--fg-3)", marginTop: 6 }}>after ₹ 17,648 TDS</div>
+              </div>
+              <div style={{ padding: 16 }}>
+                <div style={{ font: "600 10px/1 var(--font-sans)", letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 8 }}>Funding account</div>
+                <div style={{ font: "600 13px/1.3 var(--font-sans)" }}>HDFC Bank · Current</div>
+                <div className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11, marginTop: 4 }}>***4421 · Bal ₹ 1.42 Cr</div>
+              </div>
+            </div>
+            <table className="ka-tbl compact">
+              <thead><tr>
+                <th>Invoice</th><th>Vendor</th><th className="num">Gross</th><th className="num">TDS</th><th className="num">Net</th><th>Mode</th><th>Status</th>
+              </tr></thead>
+              <tbody>
+                {PAYABLES.slice(0, 4).map((p, i) => {
+                  const tds = Math.round(p.amount * 0.02);
+                  return (
+                    <tr key={i}>
+                      <td className="ka-mono">{p.id}</td>
+                      <td>{p.vendor}</td>
+                      <td className="num">{fmtINR(p.amount)}</td>
+                      <td className="num" style={{ color: "var(--fg-3)" }}>−{fmtN(tds)}</td>
+                      <td className="num" style={{ fontWeight: 600 }}>{fmtINR(p.amount - tds)}</td>
+                      <td><Badge kind="info">{p.paymentMode}</Badge></td>
+                      <td>
+                        {p.holds.length > 0
+                          ? <Badge kind="warn" dot>Hold: {p.holds[0]}</Badge>
+                          : <Badge kind="ok" dot>Cleared</Badge>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+        </Card>
+
+        <div style={{ height: 16 }}/>
+
+        {/* Full payables register */}
+        <Card title="All payables" meta="Filtered: 3-way matched · ready to pay"
+              action={
+                <div className="ka-tabs" style={{ border: "none", margin: 0 }}>
+                  <div className="ka-tab active">All <span className="ct">16</span></div>
+                  <div className="ka-tab">Due this week <span className="ct">7</span></div>
+                  <div className="ka-tab">Overdue <span className="ct">3</span></div>
+                  <div className="ka-tab">On hold <span className="ct">2</span></div>
+                </div>
+              }>
+          <table className="ka-tbl">
+            <thead><tr>
+              <th>Invoice</th><th>Vendor · GSTIN</th><th className="num">Payable</th>
+              <th>Due</th><th>Mode</th><th>Approvers</th><th>Status</th><th style={{ width: 90 }}></th>
+            </tr></thead>
+            <tbody>
+              {PAYABLES.map((p, i) => {
+                const overdue = p.dueIn < 0;
+                const dueSoon = p.dueIn >= 0 && p.dueIn <= 3;
+                return (
+                  <tr key={i} className={p.holds.length ? "row-warn" : ""}>
+                    <td className="ka-mono">{p.id}</td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{p.vendor}</div>
+                      <div className="sub">{p.gstin}</div>
+                    </td>
+                    <td className="num" style={{ fontWeight: 600 }}>{fmtINR(p.amount)}</td>
+                    <td>
+                      {overdue
+                        ? <Badge kind="bad" dot>{Math.abs(p.dueIn)}d overdue</Badge>
+                        : dueSoon
+                          ? <Badge kind="warn" dot>{p.dueIn === 0 ? "Today" : `${p.dueIn}d`}</Badge>
+                          : <span className="ka-mono" style={{ color: "var(--fg-2)" }}>in {p.dueIn}d</span>}
+                    </td>
+                    <td><Badge kind="info">{p.paymentMode}</Badge></td>
+                    <td>
+                      <div style={{ display: "flex" }}>
+                        {p.approvers.map((a, j) => (
+                          <span key={j} className="ka-av" style={{ width: 22, height: 22, fontSize: 9, marginLeft: j === 0 ? 0 : -6,
+                                                                    border: "2px solid var(--bg-surface)", background: "var(--ap-ok-bg)", color: "var(--ap-ok)" }}>{a}</span>
+                        ))}
+                      </div>
+                    </td>
+                    <td>
+                      {p.holds.length > 0
+                        ? <Badge kind="warn" dot>{p.holds[0]}</Badge>
+                        : <Badge kind="ok" dot>Cleared to pay</Badge>}
+                    </td>
+                    <td>
+                      <button className="ka-btn ka-btn-outline ka-btn-sm">
+                        {p.holds.length > 0 ? "Resolve" : "Pay now"}
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </Card>
+      </main>
+    </div>
+  );
+}
+
+
+/* ────────────────────────────────────────────────────────────────────────
+   10 · E-way bill tracker
+   ──────────────────────────────────────────────────────────────────────── */
+function ScreenEway() {
+  return (
+    <div className="ka ka-app">
+      <AppTopbar role="Purchase" roleStyle="purchase" initials="RK"/>
+      <Sidebar active="eway"/>
+      <main className="ka-canvas">
+        <PageHead
+          crumbs={["AP", "Payables", "E-way bills"]}
+          title="E-way bill tracker"
+          sub="E-way bills are pulled in automatically with each e-invoice. Track in-transit consignments, watch for validity windows, and confirm material receipt from this screen — the receipt flows back to the GRN and into the 3-way match."
+          actions={
+            <>
+              <button className="ka-btn ka-btn-outline"><Icon name="map" size={13}/> Map view</button>
+              <button className="ka-btn ka-btn-outline"><Icon name="refresh" size={13}/> Sync NIC</button>
+              <button className="ka-btn ka-btn-primary"><Icon name="check" size={13}/> Confirm receipt</button>
+            </>
+          }
+        />
+
+        <div className="ka-stats cols-5" style={{ marginBottom: 18 }}>
+          <Stat label="In transit"     value="14" sub="across 8 vendors"/>
+          <Stat label="At gate"        value="2"  sub="Bharat Steel, Pragati"/>
+          <Stat label="Delivered · 7d" value="38" sub="all reconciled"/>
+          <Stat label="Expiring · 24h" value="3"  sub="action needed"/>
+          <Stat brand label="Goods in transit · value" value="42.6" unit="L" sub="across 14 e-way bills" currency="₹"/>
+        </div>
+
+        <div className="ka-tabs">
+          <div className="ka-tab active">In transit <span className="ct">14</span></div>
+          <div className="ka-tab">At gate <span className="ct">2</span></div>
+          <div className="ka-tab">Delivered <span className="ct">38</span></div>
+          <div className="ka-tab">Expiring <span className="ct">3</span></div>
+          <div className="ka-tab">Expired <span className="ct">1</span></div>
+        </div>
+
+        {/* List of e-way bills with route */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          {EWAYS.map((e, i) => {
+            const s = EWAY_STATUS[e.status];
+            const liveIdx = e.progress >= 100 ? 3 : e.progress > 70 ? 2 : e.progress > 30 ? 1 : 0;
+            return (
+              <div key={i} className="ka-card" style={{ padding: 0 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1.2fr 2fr 1fr", alignItems: "center" }}>
+                  {/* Left — id + invoice */}
+                  <div style={{ padding: "16px 18px", borderRight: "1px solid var(--border-subtle)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                      <Icon name="truck" size={16} stroke={2}/>
+                      <span className="ka-mono" style={{ fontWeight: 600 }}>{e.id}</span>
+                      <Badge kind={s.kind} dot>{s.txt}</Badge>
+                    </div>
+                    <div style={{ font: "600 13px/1.3 var(--font-sans)" }}>{e.vendor}</div>
+                    <div className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11, marginTop: 4 }}>{e.inv} · {e.vehicle} · {e.driver}</div>
+                  </div>
+
+                  {/* Middle — route */}
+                  <div style={{ padding: "16px 22px", borderRight: "1px solid var(--border-subtle)" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                      <span style={{ font: "600 11px/1 var(--font-sans)" }}>{e.from}</span>
+                      <span className="ka-mono" style={{ color: "var(--fg-3)", fontSize: 11 }}>{e.distance}</span>
+                      <span style={{ font: "600 11px/1 var(--font-sans)" }}>{e.to}</span>
+                    </div>
+                    <div className="ka-route">
+                      <div className={`node ${liveIdx >= 0 ? "done" : ""}`}/>
+                      <div className={`seg ${liveIdx >= 1 ? "done" : ""}`}/>
+                      <div className={`node ${liveIdx === 1 ? "live" : liveIdx > 1 ? "done" : ""}`}/>
+                      <div className={`seg ${liveIdx >= 2 ? "done" : ""}`}/>
+                      <div className={`node ${liveIdx === 2 ? "live" : liveIdx > 2 ? "done" : ""}`}/>
+                      <div className={`seg ${liveIdx >= 3 ? "done" : ""}`}/>
+                      <div className={`node ${liveIdx === 3 ? "done" : ""}`}/>
+                    </div>
+                    <div style={{ display: "flex", justifyContent: "space-between", marginTop: 6, font: "500 10.5px/1 var(--font-mono)", color: "var(--fg-3)" }}>
+                      <span>Dispatched</span>
+                      <span>Last scan</span>
+                      <span>At buyer</span>
+                      <span>Confirmed</span>
+                    </div>
+                  </div>
+
+                  {/* Right — validity + action */}
+                  <div style={{ padding: "16px 18px" }}>
+                    <div style={{ font: "500 10px/1 var(--font-sans)", letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg-3)", marginBottom: 4 }}>Valid until</div>
+                    <div className="ka-mono" style={{ fontWeight: 600, fontSize: 13 }}>{e.valid}</div>
+                    <div style={{ marginTop: 12, display: "flex", gap: 6, justifyContent: "flex-end" }}>
+                      {e.status === "delivered"
+                        ? <button className="ka-btn ka-btn-outline ka-btn-sm" disabled><Icon name="check" size={11}/> Receipt confirmed</button>
+                        : e.status === "in-transit"
+                          ? <button className="ka-btn ka-btn-outline ka-btn-sm"><Icon name="pin" size={11}/> Track</button>
+                          : <button className="ka-btn ka-btn-primary ka-btn-sm"><Icon name="refresh" size={11}/> Extend validity</button>
+                      }
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+Object.assign(window, { ScreenGRN, ScreenRegister, ScreenEway });
+
+const TWEAK_DEFAULTS = {"fidelity": "hi-fi"};
+const APP_W = 1440;
+const APP_TALL = 1180;
+const APP_REG = 980;
+
+function App() {
+  useTweaks(TWEAK_DEFAULTS);
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection
+          id="ingest"
+          title="01 · Ingestion — capture every invoice"
+          subtitle="Two paths in: GST e-invoice API (auto, default) and OCR upload (fallback when vendor doesn't share OTP). The dashboard sits across both.">
+          <DCArtboard id="ap-dashboard" label="Dashboard — AP overview" width={APP_W} height={1080}>
+            <div className="ka-artboard-host"><ScreenDashboard/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-inbox" label="E-invoice inbox" width={APP_W} height={APP_REG}>
+            <div className="ka-artboard-host"><ScreenInbox/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-ocr" label="OCR upload &amp; field review" width={APP_W} height={1300}>
+            <div className="ka-artboard-host"><ScreenOCR/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-sources" label="GST API sources — per GSTIN" width={APP_W} height={APP_REG}>
+            <div className="ka-artboard-host"><ScreenSources/></div>
+          </DCArtboard>
+        </DCSection>
+        <DCSection
+          id="match"
+          title="02 · Match — invoice → PO → GRN"
+          subtitle="The verification core. Open invoice, line-link to open POs, then verify three-ways against stores' GRN. Diffs are flagged for purchase / accounts review.">
+          <DCArtboard id="ap-invoice" label="Invoice detail — parsed e-invoice" width={APP_W} height={APP_REG}>
+            <div className="ka-artboard-host"><ScreenInvoiceDetail/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-po-match" label="PO ↔ Invoice match — side-by-side" width={APP_W} height={1100}>
+            <div className="ka-artboard-host"><ScreenPOMatch/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-3way" label="3-way match — PO + Invoice + GRN" width={APP_W} height={1280}>
+            <div className="ka-artboard-host"><Screen3Way/></div>
+          </DCArtboard>
+        </DCSection>
+        <DCSection
+          id="payables"
+          title="03 · Payables &amp; logistics"
+          subtitle="Stores team posts GRN against the e-way bill; accounts releases payable; purchase tracks consignments in flight.">
+          <DCArtboard id="ap-grn" label="GRN — stores receiving" width={APP_W} height={APP_REG}>
+            <div className="ka-artboard-host"><ScreenGRN/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-register" label="AP register — ready to pay" width={APP_W} height={1160}>
+            <div className="ka-artboard-host"><ScreenRegister/></div>
+          </DCArtboard>
+          <DCArtboard id="ap-eway" label="E-way bill tracker" width={APP_W} height={APP_REG}>
+            <div className="ka-artboard-host"><ScreenEway/></div>
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+      <TweaksPanel defaults={TWEAK_DEFAULTS} title="Tweaks">
+        <TweakSection title="About this canvas">
+          <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: 0 }}>
+            10 screens across the full Kraya AP flow: e-invoice ingestion (GST API + OCR fallback),
+            line-item matching against open POs, 3-way verification with GRN, AP register, and
+            e-way bill tracking.
+          </p>
+        </TweakSection>
+        <TweakSection title="Roles modeled">
+          <p style={{ font: "400 12px/1.55 var(--font-sans)", color: "var(--fg-2)", margin: 0 }}>
+            <b>Stores</b> — receive material against POs, raise GRN.<br/>
+            <b>Purchase</b> — link e-invoice lines to open POs, track e-way bills.<br/>
+            <b>Accounts</b> — compliance check, 3-way verify, schedule payment runs.
+          </p>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
