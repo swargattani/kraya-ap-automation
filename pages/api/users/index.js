@@ -4,14 +4,22 @@ import { dbConnect } from '../../../lib/mongodb';
 import User from '../../../models/User';
 
 export default async function handler(req, res) {
-  await dbConnect();
+  try {
+    await dbConnect();
+  } catch (e) {
+    return res.status(500).json({ error: 'Database connection failed. Check MongoDB Atlas IP whitelist.' });
+  }
 
   // Setup route: allow creating first admin with no session
   if (req.method === 'POST' && req.body?.setup) {
-    const count = await User.countDocuments();
-    if (count > 0) return res.status(403).json({ error: 'Setup already done' });
-    const user = await User.create({ ...req.body, role: 'admin', setup: undefined });
-    return res.status(201).json({ email: user.email, role: user.role });
+    try {
+      const count = await User.countDocuments();
+      if (count > 0) return res.status(403).json({ error: 'Setup already done' });
+      const user = await User.create({ ...req.body, role: 'admin', setup: undefined });
+      return res.status(201).json({ email: user.email, role: user.role });
+    } catch (e) {
+      return res.status(500).json({ error: e.message });
+    }
   }
 
   const session = await getServerSession(req, res, authOptions);
