@@ -71,18 +71,25 @@ function Badge({ status, label }) {
 }
 
 async function api(path, opts = {}) {
-  const res = await fetch(path, {
-    headers: { 'Content-Type': 'application/json', ...opts.headers },
-    ...opts,
-    body: opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)
-      ? JSON.stringify(opts.body)
-      : opts.body,
-  });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error(err.error || 'Request failed');
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+  try {
+    const res = await fetch(path, {
+      headers: { 'Content-Type': 'application/json', ...opts.headers },
+      ...opts,
+      body: opts.body && typeof opts.body === 'object' && !(opts.body instanceof FormData)
+        ? JSON.stringify(opts.body)
+        : opts.body,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Request failed');
+    }
+    return res.json();
+  } finally {
+    clearTimeout(timeout);
   }
-  return res.json();
 }
 
 // ─── Toast ─────────────────────────────────────────────────────────────────
@@ -170,7 +177,8 @@ function ScreenDashboard({ setScreen, toast }) {
       ]);
       setData({ invoices, payables, pos, grns });
     } catch (e) {
-      console.error(e);
+      toast(e.message || 'Failed to load data', 'error');
+      setData({ invoices: [], payables: [], pos: [], grns: [] });
     }
   }, []);
 
