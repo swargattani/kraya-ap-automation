@@ -904,7 +904,7 @@ function ScreenMatch({ invoice: initInvoice, setScreen, toast }) {
 }
 
 // ─── 3-Way Match ─────────────────────────────────────────────────────────────
-function ScreenThreeWay({ invoice: initInvoice, setScreen, toast }) {
+function ScreenThreeWay({ invoice: initInvoice, setScreen, toast, setGrnPrefill }) {
   const [grns, setGrns] = useState([]);
   const [selectedGRN, setSelectedGRN] = useState(null);
   const [result, setResult] = useState(null);
@@ -977,7 +977,17 @@ function ScreenThreeWay({ invoice: initInvoice, setScreen, toast }) {
         {grns.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>No GRN found for this PO.</span>
-            <button className="btn btn-sm btn-secondary" onClick={() => setScreen('grns')}>Create GRN</button>
+            <button className="btn btn-sm btn-secondary" onClick={() => {
+              setGrnPrefill({
+                poId: initInvoice.poId?._id || initInvoice.poId,
+                poNo: initInvoice.poId?.poNo,
+                invoiceId: initInvoice._id,
+                vendorId: initInvoice.vendorId,
+                vendorName: initInvoice.vendorName,
+                items: initInvoice.poId?.items || [],
+              });
+              setScreen('grns');
+            }}>Create GRN</button>
           </div>
         ) : (
           grns.map(grn => (
@@ -1036,6 +1046,57 @@ function ScreenThreeWay({ invoice: initInvoice, setScreen, toast }) {
               {!check.passed && <span className="diff-chip red">{check.pct}%</span>}
             </div>
           ))}
+
+          {result.lineMatches?.length > 0 && (
+            <div style={{ marginTop: 20 }}>
+              <div className="card-title" style={{ marginBottom: 10 }}>Item-Level Comparison</div>
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th>HSN</th>
+                      <th className="text-right">PO Qty</th>
+                      <th className="text-right">Inv Qty</th>
+                      <th className="text-right">GRN Recd</th>
+                      <th className="text-right">GRN Accptd</th>
+                      <th className="text-right">PO Rate</th>
+                      <th className="text-right">Inv Rate</th>
+                      <th className="text-right">Inv Value</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {result.lineMatches.map((lm, i) => {
+                      const grnItem = result.grn?.items?.[i];
+                      const rateOk = !lm.diffs?.find(d => d.field === 'rate');
+                      const qtyOk  = !lm.diffs?.find(d => d.field === 'qty');
+                      const grnOk  = !grnItem || (grnItem.acceptedQty >= lm.poLine?.qty * 0.95);
+                      return (
+                        <tr key={i}>
+                          <td style={{ fontWeight: 500 }}>{lm.invLine?.description || lm.poLine?.description}</td>
+                          <td><span className="mono">{lm.invLine?.hsnCode || lm.poLine?.hsnCode}</span></td>
+                          <td className="text-right amount">{lm.poLine?.qty} {lm.poLine?.unit}</td>
+                          <td className="text-right amount" style={{ color: qtyOk ? undefined : 'var(--red)' }}>{lm.invLine?.qty} {lm.invLine?.unit}</td>
+                          <td className="text-right amount">{grnItem?.receivedQty ?? '—'}</td>
+                          <td className="text-right amount" style={{ color: grnItem && !grnOk ? 'var(--red)' : undefined }}>{grnItem?.acceptedQty ?? '—'}</td>
+                          <td className="text-right amount">{fmtAmt(lm.poLine?.rate)}</td>
+                          <td className="text-right amount" style={{ color: rateOk ? undefined : 'var(--amber)' }}>{fmtAmt(lm.invLine?.rate)}</td>
+                          <td className="text-right amount" style={{ fontWeight: 600 }}>{fmtAmt(lm.invLine?.amount || (lm.invLine?.qty * lm.invLine?.rate))}</td>
+                          <td>
+                            {lm.match === 'exact' ? <span style={{ color: 'var(--green)', fontSize: 11, fontWeight: 600 }}>✓ Exact</span>
+                              : lm.match === 'mismatch' ? <span style={{ color: 'var(--red)', fontSize: 11, fontWeight: 600 }}>✗ Mismatch</span>
+                              : lm.match === 'missing' ? <span style={{ color: 'var(--red)', fontSize: 11, fontWeight: 600 }}>Missing</span>
+                              : <span style={{ color: 'var(--amber)', fontSize: 11, fontWeight: 600 }}>~ Tolerance</span>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           {result.allPassed && (
             <div style={{ marginTop: 16, display: 'flex', gap: 8 }}>
@@ -1205,12 +1266,13 @@ function ScreenPOs({ toast }) {
 }
 
 // ─── GRNs ────────────────────────────────────────────────────────────────────
-function ScreenGRNs({ toast }) {
+function ScreenGRNs({ toast, prefill, setPrefill }) {
   const [grns, setGrns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [pos, setPos] = useState([]);
-  const [form, setForm] = useState({ grnNo: '', poId: '', grnDate: '', receivedBy: '', items: [{ description: '', orderedQty: '', receivedQty: '', acceptedQty: '', unit: 'NOS', condition: 'good' }] });
+  const emptyForm = { grnNo: '', poId: '', grnDate: new Date().toISOString().slice(0,10), receivedBy: '', items: [] };
+  const [form, setForm] = useState(emptyForm);
 
   const load = async () => {
     setLoading(true);
@@ -1221,8 +1283,60 @@ function ScreenGRNs({ toast }) {
 
   useEffect(() => { load(); }, []);
 
-  const addLine = () => setForm(f => ({ ...f, items: [...f.items, { description: '', orderedQty: '', receivedQty: '', acceptedQty: '', unit: 'NOS', condition: 'good' }] }));
-  const updLine = (i, k, v) => setForm(f => { const items = [...f.items]; items[i] = { ...items[i], [k]: v }; return { ...f, items }; });
+  // Auto-open form when prefill is passed from invoice/3-way match
+  useEffect(() => {
+    if (!prefill || pos.length === 0) return;
+    const nextNo = 'GRN-2425-' + String(grns.length + 113).padStart(4, '0');
+    setForm({
+      grnNo: nextNo,
+      poId: prefill.poId || '',
+      grnDate: new Date().toISOString().slice(0, 10),
+      receivedBy: '',
+      invoiceId: prefill.invoiceId || '',
+      items: (prefill.items || []).map(it => ({
+        description: it.description,
+        hsnCode: it.hsnCode || '',
+        unit: it.unit || 'NOS',
+        rate: it.rate || 0,
+        orderedQty: it.qty,
+        receivedQty: it.qty,   // default to full qty — user adjusts if short
+        acceptedQty: it.qty,
+        condition: 'good',
+        remarks: '',
+      })),
+    });
+    setShowForm(true);
+    setPrefill(null);
+  }, [prefill, pos]);
+
+  const onPoSelect = (poId) => {
+    const po = pos.find(p => p._id === poId);
+    setForm(f => ({
+      ...f,
+      poId,
+      items: po?.items?.length ? po.items.map(it => ({
+        description: it.description,
+        hsnCode: it.hsnCode || '',
+        unit: it.unit || 'NOS',
+        rate: it.rate || 0,
+        orderedQty: it.qty,
+        receivedQty: '',
+        acceptedQty: '',
+        condition: 'good',
+        remarks: '',
+      })) : f.items,
+    }));
+  };
+
+  const updLine = (i, k, v) => setForm(f => {
+    const items = [...f.items];
+    items[i] = { ...items[i], [k]: v };
+    // Auto-set acceptedQty = receivedQty when receivedQty changes (user adjusts if needed)
+    if (k === 'receivedQty' && items[i].acceptedQty === items[i].orderedQty) {
+      items[i].acceptedQty = v;
+    }
+    return { ...f, items };
+  });
 
   const submit = async (e) => {
     e.preventDefault();
@@ -1234,11 +1348,17 @@ function ScreenGRNs({ toast }) {
           ...form,
           vendorId: po?.vendorId,
           vendorName: po?.vendorName,
-          items: form.items.map(it => ({ ...it, orderedQty: Number(it.orderedQty), receivedQty: Number(it.receivedQty), acceptedQty: Number(it.acceptedQty) })),
+          items: form.items.map(it => ({
+            ...it,
+            orderedQty: Number(it.orderedQty),
+            receivedQty: Number(it.receivedQty),
+            acceptedQty: Number(it.acceptedQty),
+          })),
         },
       });
       toast('GRN created!', 'success');
       setShowForm(false);
+      setForm(emptyForm);
       load();
     } catch (e) { toast(e.message, 'error'); }
   };
@@ -1261,7 +1381,7 @@ function ScreenGRNs({ toast }) {
       </div>
       <div className="toolbar">
         <div className="toolbar-right">
-          <button className="btn btn-primary btn-sm" onClick={() => setShowForm(true)}>
+          <button className="btn btn-primary btn-sm" onClick={() => { setForm(emptyForm); setShowForm(true); }}>
             <Icon n="plus" size={13} /> New GRN
           </button>
         </div>
@@ -1269,7 +1389,7 @@ function ScreenGRNs({ toast }) {
 
       {showForm && (
         <div className="modal-overlay" onClick={() => setShowForm(false)}>
-          <div className="modal" style={{ maxWidth: 700 }} onClick={e => e.stopPropagation()}>
+          <div className="modal" style={{ maxWidth: 820 }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <span className="modal-title">New Goods Receipt Note</span>
               <button className="btn btn-ghost btn-sm" onClick={() => setShowForm(false)}><Icon n="x" size={14} /></button>
@@ -1282,50 +1402,110 @@ function ScreenGRNs({ toast }) {
                     <input className="form-control" required value={form.grnNo} onChange={e => setForm(f => ({ ...f, grnNo: e.target.value }))} placeholder="GRN-2425-0113" />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Link to PO</label>
-                    <select className="form-control" value={form.poId} onChange={e => setForm(f => ({ ...f, poId: e.target.value }))}>
-                      <option value="">Select PO…</option>
+                    <label className="form-label">Link to PO *</label>
+                    <select className="form-control" required value={form.poId} onChange={e => onPoSelect(e.target.value)}>
+                      <option value="">Select PO to load items…</option>
                       {pos.map(p => <option key={p._id} value={p._id}>{p.poNo} — {p.vendorName}</option>)}
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">GRN Date</label>
+                    <label className="form-label">Receipt Date</label>
                     <input className="form-control" type="date" value={form.grnDate} onChange={e => setForm(f => ({ ...f, grnDate: e.target.value }))} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Received By</label>
+                    <label className="form-label">Received By (Stores)</label>
                     <input className="form-control" value={form.receivedBy} onChange={e => setForm(f => ({ ...f, receivedBy: e.target.value }))} placeholder="Stores — Name" />
                   </div>
                 </div>
-                <div className="divider" />
-                <div className="section-title" style={{ marginBottom: 10 }}>Items Received</div>
-                {form.items.map((item, i) => (
-                  <div key={i} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Description</label>
-                      <input className="form-control" value={item.description} onChange={e => updLine(i, 'description', e.target.value)} />
+
+                {form.items.length > 0 ? (
+                  <>
+                    <div className="divider" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                      <div className="section-title">Items from PO</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)' }}>Description & rate pre-filled from PO — enter received quantities only</div>
                     </div>
-                    {['orderedQty', 'receivedQty', 'acceptedQty'].map(k => (
-                      <div key={k} className="form-group" style={{ marginBottom: 0 }}>
-                        <label className="form-label">{k === 'orderedQty' ? 'Ordered' : k === 'receivedQty' ? 'Received' : 'Accepted'}</label>
-                        <input className="form-control" type="number" value={item[k]} onChange={e => updLine(i, k, e.target.value)} />
-                      </div>
-                    ))}
-                    <div className="form-group" style={{ marginBottom: 0 }}>
-                      <label className="form-label">Condition</label>
-                      <select className="form-control" value={item.condition} onChange={e => updLine(i, 'condition', e.target.value)}>
-                        <option value="good">Good</option>
-                        <option value="damaged">Damaged</option>
-                        <option value="short">Short</option>
-                      </select>
+                    <div style={{ overflowX: 'auto' }}>
+                      <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                        <thead>
+                          <tr style={{ background: 'var(--bg-secondary)' }}>
+                            <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>Description</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>HSN</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>PO Qty</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>Unit</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>Rate</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: 'var(--kraya-red)', fontSize: 11 }}>Received Qty *</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 600, color: 'var(--kraya-red)', fontSize: 11 }}>Accepted Qty *</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>Condition</th>
+                            <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: 600, color: 'var(--text-secondary)', fontSize: 11 }}>Remarks</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {form.items.map((item, i) => {
+                            const receivedNum = Number(item.receivedQty) || 0;
+                            const acceptedNum = Number(item.acceptedQty) || 0;
+                            const isShort = receivedNum < item.orderedQty;
+                            const hasRejected = acceptedNum < receivedNum;
+                            return (
+                              <tr key={i} style={{ borderBottom: '1px solid var(--border)', background: i % 2 === 0 ? '#fff' : 'var(--bg-secondary)' }}>
+                                <td style={{ padding: '6px 8px', fontWeight: 500 }}>{item.description}</td>
+                                <td style={{ padding: '6px 8px', textAlign: 'center', fontFamily: 'var(--mono)', fontSize: 11 }}>{item.hsnCode}</td>
+                                <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mono)' }}>{item.orderedQty}</td>
+                                <td style={{ padding: '6px 8px', textAlign: 'right', color: 'var(--text-secondary)' }}>{item.unit}</td>
+                                <td style={{ padding: '6px 8px', textAlign: 'right', fontFamily: 'var(--mono)' }}>{fmtAmt(item.rate)}</td>
+                                <td style={{ padding: '4px 8px', textAlign: 'right' }}>
+                                  <input
+                                    type="number" required min="0" max={item.orderedQty * 1.05}
+                                    value={item.receivedQty}
+                                    onChange={e => updLine(i, 'receivedQty', e.target.value)}
+                                    style={{ width: 70, padding: '4px 6px', border: `1px solid ${isShort && receivedNum > 0 ? 'var(--amber)' : 'var(--border)'}`, borderRadius: 4, textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, background: isShort && receivedNum > 0 ? '#FFFBF0' : '#fff' }}
+                                  />
+                                  {isShort && receivedNum > 0 && <div style={{ fontSize: 9, color: 'var(--amber)', marginTop: 2 }}>Short by {item.orderedQty - receivedNum}</div>}
+                                </td>
+                                <td style={{ padding: '4px 8px', textAlign: 'right' }}>
+                                  <input
+                                    type="number" required min="0" max={item.receivedQty || item.orderedQty}
+                                    value={item.acceptedQty}
+                                    onChange={e => updLine(i, 'acceptedQty', e.target.value)}
+                                    style={{ width: 70, padding: '4px 6px', border: `1px solid ${hasRejected ? 'var(--red)' : 'var(--border)'}`, borderRadius: 4, textAlign: 'right', fontFamily: 'var(--mono)', fontSize: 12, background: hasRejected ? '#FFF0F0' : '#fff' }}
+                                  />
+                                  {hasRejected && <div style={{ fontSize: 9, color: 'var(--red)', marginTop: 2 }}>{receivedNum - acceptedNum} rejected</div>}
+                                </td>
+                                <td style={{ padding: '4px 8px' }}>
+                                  <select value={item.condition} onChange={e => updLine(i, 'condition', e.target.value)}
+                                    style={{ padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 12, width: 90 }}>
+                                    <option value="good">Good</option>
+                                    <option value="damaged">Damaged</option>
+                                    <option value="short">Short</option>
+                                    <option value="rejected">Rejected</option>
+                                  </select>
+                                </td>
+                                <td style={{ padding: '4px 8px' }}>
+                                  <input value={item.remarks || ''} onChange={e => updLine(i, 'remarks', e.target.value)}
+                                    placeholder="Optional"
+                                    style={{ width: 120, padding: '4px 6px', border: '1px solid var(--border)', borderRadius: 4, fontSize: 11 }} />
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
                     </div>
+                    <div style={{ marginTop: 10, padding: '8px 12px', background: 'var(--bg-secondary)', borderRadius: 4, fontSize: 12, color: 'var(--text-secondary)' }}>
+                      Total PO Value: <strong>{fmtAmt(form.items.reduce((s, it) => s + (it.orderedQty * it.rate), 0))}</strong>
+                      &nbsp;·&nbsp;
+                      Received Value: <strong>{fmtAmt(form.items.reduce((s, it) => s + ((Number(it.acceptedQty) || 0) * it.rate), 0))}</strong>
+                    </div>
+                  </>
+                ) : (
+                  <div className="alert alert-info" style={{ marginTop: 16 }}>
+                    <Icon n="info" size={14} /> Select a PO above — items will be loaded automatically from the purchase order.
                   </div>
-                ))}
-                <button type="button" className="btn btn-ghost btn-sm" onClick={addLine}><Icon n="plus" size={12} /> Add Line</button>
+                )}
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Create GRN</button>
+                <button type="submit" className="btn btn-primary" disabled={form.items.length === 0}>Create GRN</button>
               </div>
             </form>
           </div>
@@ -1336,27 +1516,26 @@ function ScreenGRNs({ toast }) {
         <div className="table-wrap">
           <table>
             <thead><tr>
-              <th>GRN No</th><th>Vendor</th><th>Linked PO</th><th>Date</th>
-              <th>Received By</th><th>Items</th><th>Status</th><th></th>
+              <th>GRN No</th><th>PO No</th><th>Vendor</th><th>Date</th>
+              <th className="text-right">Items</th><th>Status</th><th></th>
             </tr></thead>
             <tbody>
               {grns.map(grn => (
                 <tr key={grn._id}>
-                  <td><span className="mono" style={{ fontWeight: 600 }}>{grn.grnNo}</span></td>
-                  <td>{grn.vendorName || '—'}</td>
+                  <td><span className="mono">{grn.grnNo}</span></td>
                   <td><span className="mono">{grn.poId?.poNo || '—'}</span></td>
+                  <td style={{ fontWeight: 500 }}>{grn.vendorName}</td>
                   <td>{fmtDate(grn.grnDate)}</td>
-                  <td style={{ fontSize: 12 }}>{grn.receivedBy || '—'}</td>
-                  <td style={{ fontSize: 12 }}>{grn.items?.length || 0} lines</td>
+                  <td className="text-right">{grn.items?.length || 0}</td>
                   <td><Badge status={grn.status} /></td>
                   <td>
-                    {grn.status === 'draft' && (
+                    {grn.status === 'pending' && (
                       <button className="btn btn-success btn-sm" onClick={() => approve(grn._id)}>Approve</button>
                     )}
                   </td>
                 </tr>
               ))}
-              {grns.length === 0 && <tr><td colSpan={8} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>No GRNs yet</td></tr>}
+              {grns.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>No GRNs yet</td></tr>}
             </tbody>
           </table>
         </div>
@@ -1783,6 +1962,7 @@ export default function App() {
   const [matchInvoice, setMatchInvoice] = useState(null);
   const [counts, setCounts] = useState({ pendingInvoices: 0 });
   const [toast, setToast] = useState({ msg: '', type: '' });
+  const [grnPrefill, setGrnPrefill] = useState(null);
 
   const showToast = (msg, type = 'info') => setToast({ msg, type });
 
@@ -1811,9 +1991,9 @@ export default function App() {
         return <ScreenMatch invoice={matchInvoice} setScreen={setScreen} toast={showToast} />;
       case 'threeway':
         if (!matchInvoice && !selectedInvoice) { setScreen('inbox'); return null; }
-        return <ScreenThreeWay invoice={matchInvoice || selectedInvoice} setScreen={setScreen} toast={showToast} />;
+        return <ScreenThreeWay invoice={matchInvoice || selectedInvoice} setScreen={setScreen} toast={showToast} setGrnPrefill={setGrnPrefill} />;
       case 'pos': return <ScreenPOs toast={showToast} />;
-      case 'grns': return <ScreenGRNs toast={showToast} />;
+      case 'grns': return <ScreenGRNs toast={showToast} prefill={grnPrefill} setPrefill={setGrnPrefill} />;
       case 'vendors': return <ScreenVendors toast={showToast} />;
       case 'register': return <ScreenRegister toast={showToast} />;
       default: return <ScreenDashboard setScreen={setScreen} toast={showToast} />;
