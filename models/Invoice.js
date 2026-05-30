@@ -14,6 +14,7 @@ const InvLineSchema = new mongoose.Schema({
 }, { _id: false });
 
 const InvoiceSchema = new mongoose.Schema({
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', index: true },
   irn: String,
   invoiceNo: { type: String, required: true },
   invoiceDate: Date,

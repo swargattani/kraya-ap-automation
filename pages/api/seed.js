@@ -1,3 +1,5 @@
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from './auth/[...nextauth]';
 import { dbConnect } from '../../lib/mongodb';
 import Vendor from '../../models/Vendor';
 import PO from '../../models/PO';
@@ -19,24 +21,29 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'POST only' });
   }
 
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  const companyId = session.user.companyId;
+
   const { force } = req.body || {};
   await dbConnect();
 
-  const existingVendors = await Vendor.countDocuments();
+  const existingVendors = await Vendor.countDocuments(companyId ? { companyId } : {});
   if (existingVendors > 0 && !force) {
     return res.json({ message: 'Already seeded. Pass force:true to re-seed.', vendors: existingVendors });
   }
 
-  // Clear existing
+  // Clear existing company data
+  const filter = companyId ? { companyId } : {};
   await Promise.all([
-    Vendor.deleteMany({}),
-    PO.deleteMany({}),
-    Invoice.deleteMany({}),
-    GRN.deleteMany({}),
-    Payable.deleteMany({}),
+    Vendor.deleteMany(filter),
+    PO.deleteMany(filter),
+    Invoice.deleteMany(filter),
+    GRN.deleteMany(filter),
+    Payable.deleteMany(filter),
   ]);
 
-  const vendors = await Vendor.insertMany(SEED_VENDORS);
+  const vendors = await Vendor.insertMany(SEED_VENDORS.map(v => ({ ...v, companyId })));
   const [v0, v1, v2, v3, v4] = vendors;
 
   const now = new Date();
@@ -44,6 +51,7 @@ export default async function handler(req, res) {
 
   const pos = await PO.insertMany([
     {
+      companyId,
       poNo: 'PO-2425-0081',
       poDate: d(-20),
       vendorId: v0._id, vendorName: v0.name, vendorGSTIN: v0.gstin,
@@ -55,6 +63,7 @@ export default async function handler(req, res) {
       subtotal: 51400, totalTax: 9252, totalAmount: 60652, status: 'open',
     },
     {
+      companyId,
       poNo: 'PO-2425-0082',
       poDate: d(-15),
       vendorId: v1._id, vendorName: v1.name, vendorGSTIN: v1.gstin,
@@ -66,6 +75,7 @@ export default async function handler(req, res) {
       subtotal: 38500, totalTax: 6930, totalAmount: 45430, status: 'open',
     },
     {
+      companyId,
       poNo: 'PO-2425-0083',
       poDate: d(-10),
       vendorId: v2._id, vendorName: v2.name, vendorGSTIN: v2.gstin,
@@ -76,6 +86,7 @@ export default async function handler(req, res) {
       subtotal: 42000, totalTax: 7560, totalAmount: 49560, status: 'open',
     },
     {
+      companyId,
       poNo: 'PO-2425-0084',
       poDate: d(-8),
       vendorId: v3._id, vendorName: v3.name, vendorGSTIN: v3.gstin,
@@ -90,6 +101,7 @@ export default async function handler(req, res) {
 
   const invoices = await Invoice.insertMany([
     {
+      companyId,
       invoiceNo: 'BSW/24-25/1847',
       invoiceDate: d(-18),
       vendorId: v0._id, vendorName: v0.name, vendorGSTIN: v0.gstin,
@@ -106,6 +118,7 @@ export default async function handler(req, res) {
       irn: 'a5f8c3d2e1b4a7f6c9d0e3b2a1f4c7d0e3b2a1f4c7d0e3b2a1f4c7d0e3b2a1f4',
     },
     {
+      companyId,
       invoiceNo: 'OM/2425/0334',
       invoiceDate: d(-12),
       vendorId: v1._id, vendorName: v1.name, vendorGSTIN: v1.gstin,
@@ -121,6 +134,7 @@ export default async function handler(req, res) {
       source: 'ocr', status: 'pending', matchStatus: 'unmatched',
     },
     {
+      companyId,
       invoiceNo: 'TCL/25/00892',
       invoiceDate: d(-8),
       vendorId: v2._id, vendorName: v2.name, vendorGSTIN: v2.gstin,
@@ -134,6 +148,7 @@ export default async function handler(req, res) {
       source: 'ocr', status: 'pending', matchStatus: 'unmatched',
     },
     {
+      companyId,
       invoiceNo: 'PE/2425/0567',
       invoiceDate: d(-5),
       vendorId: v3._id, vendorName: v3.name, vendorGSTIN: v3.gstin,
@@ -149,6 +164,7 @@ export default async function handler(req, res) {
       source: 'ocr', status: 'approved', matchStatus: 'three_way_matched',
     },
     {
+      companyId,
       invoiceNo: 'VST/2425/0289',
       invoiceDate: d(-3),
       vendorId: v4._id, vendorName: v4.name, vendorGSTIN: v4.gstin,
@@ -165,6 +181,7 @@ export default async function handler(req, res) {
   ]);
 
   const grn = await GRN.create({
+    companyId,
     grnNo: 'GRN-2425-0112',
     grnDate: d(-4),
     poId: pos[3]._id,
@@ -182,6 +199,7 @@ export default async function handler(req, res) {
 
   await Payable.insertMany([
     {
+      companyId,
       invoiceId: invoices[3]._id,
       vendorId: v3._id, vendorName: v3.name, vendorGSTIN: v3.gstin,
       invoiceNo: 'PE/2425/0567',
@@ -192,6 +210,7 @@ export default async function handler(req, res) {
       status: 'scheduled',
     },
     {
+      companyId,
       invoiceId: invoices[0]._id,
       vendorId: v0._id, vendorName: v0.name, vendorGSTIN: v0.gstin,
       invoiceNo: 'BSW/24-25/1847',

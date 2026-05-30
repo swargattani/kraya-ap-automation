@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import Head from 'next/head';
+import { useSession, signOut } from 'next-auth/react';
 
 // ─── Icons (inline SVG) ────────────────────────────────────────────────────
 function Icon({ n, size = 16 }) {
@@ -121,15 +122,17 @@ const NAV = [
   { id: 'dashboard', label: 'Dashboard', icon: 'dashboard', section: 'Overview' },
   { id: 'inbox', label: 'E-Invoice Inbox', icon: 'inbox', section: 'Capture' },
   { id: 'ocr', label: 'OCR Upload', icon: 'upload' },
+  { id: 'import', label: 'Excel Import', icon: 'download' },
   { id: 'pos', label: 'Purchase Orders', icon: 'po', section: 'Procurement' },
   { id: 'grns', label: 'Goods Receipts', icon: 'grn' },
   { id: 'vendors', label: 'Vendors', icon: 'vendors' },
   { id: 'match', label: 'PO Matching', icon: 'match', section: 'Verification' },
   { id: 'threeway', label: '3-Way Match', icon: 'check3' },
   { id: 'register', label: 'AP Register', icon: 'register', section: 'Payables' },
+  { id: 'settings', label: 'Settings', icon: 'edit', section: 'Account' },
 ];
 
-function Sidebar({ screen, setScreen, counts }) {
+function Sidebar({ screen, setScreen, counts, companyName, userEmail }) {
   return (
     <div className="sidebar">
       <div className="sidebar-logo">
@@ -137,8 +140,8 @@ function Sidebar({ screen, setScreen, counts }) {
         <div className="sidebar-logo-sub">AP Automation</div>
       </div>
       <div className="sidebar-org">
-        <div className="sidebar-org-name">Haldiram Snacks Pvt Ltd</div>
-        <div className="sidebar-org-gstin">27AAACH1234I1Z0</div>
+        <div className="sidebar-org-name">{companyName || 'Your Company'}</div>
+        <div className="sidebar-org-gstin" style={{ fontSize: 11, opacity: 0.7, marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{userEmail || ''}</div>
       </div>
       <nav className="sidebar-nav">
         {NAV.map(item => (
@@ -157,7 +160,16 @@ function Sidebar({ screen, setScreen, counts }) {
           </div>
         ))}
       </nav>
-      <div className="sidebar-footer">v1.0 · Kraya AP</div>
+      <div className="sidebar-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>v2.0 · Kraya AP</span>
+        <button
+          onClick={() => signOut({ callbackUrl: '/login' })}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: 11, padding: '2px 4px', borderRadius: 3, fontFamily: 'inherit' }}
+          title="Sign out"
+        >
+          Sign out
+        </button>
+      </div>
     </div>
   );
 }
@@ -1955,8 +1967,279 @@ function ScreenUsers({ toast }) {
   );
 }
 
+// ─── Excel Import ────────────────────────────────────────────────────────────
+function ImportTab({ type, label, apiPath, resultKeys }) {
+  const [uploading, setUploading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const fileRef = useRef();
+
+  const downloadTemplate = () => {
+    window.location.href = `/api/templates/${type}`;
+  };
+
+  const doUpload = async (file) => {
+    setUploading(true);
+    setError(null);
+    setResult(null);
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await fetch(apiPath, { method: 'POST', body: fd });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Upload failed');
+      setResult(data);
+    } catch (e) {
+      setError(e.message);
+    }
+    setUploading(false);
+  };
+
+  return (
+    <div style={{ padding: '20px 0' }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+        <button className="btn btn-secondary btn-sm" onClick={downloadTemplate}>
+          <Icon n="download" size={13} /> Download {label} Template
+        </button>
+      </div>
+
+      <div
+        style={{
+          border: '2px dashed var(--border)', borderRadius: 8, padding: '32px 24px',
+          textAlign: 'center', cursor: 'pointer', background: 'var(--bg-secondary)',
+          transition: 'border-color 0.2s',
+        }}
+        onClick={() => fileRef.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); }}
+        onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) doUpload(f); }}
+      >
+        <input ref={fileRef} type="file" accept=".xlsx,.xls" style={{ display: 'none' }}
+          onChange={e => e.target.files[0] && doUpload(e.target.files[0])} />
+        {uploading ? (
+          <>
+            <div className="spinner" style={{ margin: '0 auto 12px' }} />
+            <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Importing {label}…</div>
+          </>
+        ) : (
+          <>
+            <Icon n="upload" size={28} />
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 10 }}>Drop .xlsx file or click to browse</div>
+            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4 }}>
+              Use the template above — headers must match exactly
+            </div>
+          </>
+        )}
+      </div>
+
+      {error && (
+        <div className="alert alert-error" style={{ marginTop: 16 }}>
+          <Icon n="warn" size={14} /> {error}
+        </div>
+      )}
+
+      {result && (
+        <div className="alert alert-success" style={{ marginTop: 16, flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+          <div style={{ fontWeight: 600, marginBottom: 4 }}>Import complete</div>
+          {resultKeys.map(({ key, label: rl }) => (
+            result[key] !== undefined && (
+              <div key={key} style={{ fontSize: 13 }}>
+                {rl}: <strong>{Array.isArray(result[key]) ? result[key].length : result[key]}</strong>
+              </div>
+            )
+          ))}
+          {result.errors?.length > 0 && (
+            <div style={{ marginTop: 8 }}>
+              <div style={{ fontWeight: 600, fontSize: 12, color: 'var(--red)', marginBottom: 4 }}>
+                Errors ({result.errors.length}):
+              </div>
+              {result.errors.slice(0, 5).map((e, i) => (
+                <div key={i} style={{ fontSize: 11, color: 'var(--red)', fontFamily: 'var(--mono)' }}>{e}</div>
+              ))}
+              {result.errors.length > 5 && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>…and {result.errors.length - 5} more</div>}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ScreenImport() {
+  const [tab, setTab] = useState('pos');
+  const tabs = [
+    { id: 'pos', label: 'Purchase Orders' },
+    { id: 'invoices', label: 'Invoices' },
+    { id: 'grns', label: 'GRNs' },
+  ];
+
+  const tabConfig = {
+    pos: {
+      label: 'PO',
+      apiPath: '/api/pos/import',
+      resultKeys: [
+        { key: 'imported', label: 'Imported' },
+        { key: 'skipped', label: 'Skipped' },
+        { key: 'errors', label: 'Errors' },
+      ],
+    },
+    invoices: {
+      label: 'Invoice',
+      apiPath: '/api/invoices/import',
+      resultKeys: [
+        { key: 'imported', label: 'Imported' },
+        { key: 'matched', label: 'Auto-matched to PO' },
+        { key: 'errors', label: 'Errors' },
+      ],
+    },
+    grns: {
+      label: 'GRN',
+      apiPath: '/api/grns/import',
+      resultKeys: [
+        { key: 'imported', label: 'Imported' },
+        { key: 'errors', label: 'Errors' },
+      ],
+    },
+  };
+
+  return (
+    <div>
+      <div className="page-head">
+        <h1>Excel Import</h1>
+        <p>Bulk import Purchase Orders, Invoices, or GRNs from Excel spreadsheets</p>
+      </div>
+
+      <div className="card">
+        <div style={{ display: 'flex', gap: 4, borderBottom: '1px solid var(--border)', marginBottom: 0, paddingBottom: 0 }}>
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              style={{
+                padding: '8px 16px', border: 'none', cursor: 'pointer', fontSize: 13,
+                fontWeight: tab === t.id ? 700 : 500,
+                color: tab === t.id ? 'var(--kraya-red)' : 'var(--text-secondary)',
+                borderBottom: tab === t.id ? '2px solid var(--kraya-red)' : '2px solid transparent',
+                background: 'none', fontFamily: 'inherit', marginBottom: -1,
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <ImportTab
+          key={tab}
+          type={tab === 'pos' ? 'po' : tab === 'invoices' ? 'invoice' : 'grn'}
+          label={tabConfig[tab].label}
+          apiPath={tabConfig[tab].apiPath}
+          resultKeys={tabConfig[tab].resultKeys}
+        />
+      </div>
+
+      <div className="card" style={{ marginTop: 20 }}>
+        <div className="card-title" style={{ marginBottom: 12 }}>Import Tips</div>
+        <ul style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.8, paddingLeft: 20 }}>
+          <li>Download the template first — column headers must match exactly</li>
+          <li>For POs with multiple line items, repeat the PO No on each row</li>
+          <li>Dates can be in YYYY-MM-DD format or Excel date format</li>
+          <li>GSTIN should be exactly 15 alphanumeric characters (uppercase)</li>
+          <li>Invoices with a matching PO Ref will be auto-matched on import</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+// ─── Settings ────────────────────────────────────────────────────────────────
+function ScreenSettings({ toast, session }) {
+  const [form, setForm] = useState({ name: '', gstin: '', address: '' });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/company')
+      .then(r => r.json())
+      .then(data => {
+        setForm({ name: data.name || '', gstin: data.gstin || '', address: data.address || '' });
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const res = await fetch('/api/company', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Save failed');
+      toast('Settings saved!', 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+    setSaving(false);
+  };
+
+  const inp = (k) => (e) => setForm(f => ({ ...f, [k]: e.target.value }));
+
+  if (loading) return <div className="loading"><div className="spinner" /></div>;
+
+  return (
+    <div>
+      <div className="page-head">
+        <h1>Settings</h1>
+        <p>Manage your company profile and account preferences</p>
+      </div>
+
+      <div className="card" style={{ maxWidth: 560 }}>
+        <div className="card-title" style={{ marginBottom: 16 }}>Company Profile</div>
+        <form onSubmit={submit}>
+          <div className="form-group">
+            <label className="form-label">Company Name *</label>
+            <input className="form-control" required value={form.name} onChange={inp('name')} placeholder="Acme Manufacturing Pvt Ltd" />
+          </div>
+          <div className="form-group">
+            <label className="form-label">GSTIN</label>
+            <input className="form-control" value={form.gstin} onChange={inp('gstin')} placeholder="27AABCB1234F1Z5" maxLength={15} />
+            <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>15 alphanumeric characters</div>
+          </div>
+          <div className="form-group">
+            <label className="form-label">Address</label>
+            <input className="form-control" value={form.address} onChange={inp('address')} placeholder="123 Industrial Area, Mumbai 400001" />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <div className="card" style={{ maxWidth: 560, marginTop: 20 }}>
+        <div className="card-title" style={{ marginBottom: 12 }}>Account Info</div>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.8 }}>
+          <div>Email: <strong style={{ color: 'var(--text-primary)' }}>{session?.user?.email}</strong></div>
+          <div>Role: <strong style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{session?.user?.role}</strong></div>
+        </div>
+        <div style={{ marginTop: 16 }}>
+          <button
+            className="btn btn-secondary btn-sm"
+            onClick={() => signOut({ callbackUrl: '/login' })}
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── App Shell ────────────────────────────────────────────────────────────────
 export default function App() {
+  const { data: session, status } = useSession();
   const [screen, setScreen] = useState('dashboard');
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [matchInvoice, setMatchInvoice] = useState(null);
@@ -1966,7 +2249,15 @@ export default function App() {
 
   const showToast = (msg, type = 'info') => setToast({ msg, type });
 
+  // Redirect to login if unauthenticated
   useEffect(() => {
+    if (status === 'unauthenticated') {
+      window.location.href = '/login';
+    }
+  }, [status]);
+
+  useEffect(() => {
+    if (status !== 'authenticated') return;
     const loadCounts = async () => {
       try {
         const invs = await api('/api/invoices?status=pending');
@@ -1976,13 +2267,26 @@ export default function App() {
     loadCounts();
     const t = setInterval(loadCounts, 30000);
     return () => clearInterval(t);
-  }, []);
+  }, [status]);
+
+  if (status === 'loading' || status === 'unauthenticated') {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'DM Sans, sans-serif' }}>
+        <div className="spinner" />
+      </div>
+    );
+  }
+
+  const companyName = session?.user?.companyName || '';
+  const userEmail = session?.user?.email || '';
 
   const renderScreen = () => {
     switch (screen) {
       case 'dashboard': return <ScreenDashboard setScreen={setScreen} toast={showToast} />;
       case 'inbox': return <ScreenInbox setScreen={setScreen} setSelectedInvoice={setSelectedInvoice} toast={showToast} />;
       case 'ocr': return <ScreenOCR setScreen={setScreen} setSelectedInvoice={setSelectedInvoice} toast={showToast} />;
+      case 'import': return <ScreenImport />;
+      case 'settings': return <ScreenSettings toast={showToast} session={session} />;
       case 'invoice_detail':
         if (!selectedInvoice) { setScreen('inbox'); return null; }
         return <ScreenInvoiceDetail invoice={selectedInvoice} setScreen={setScreen} setMatchInvoice={setMatchInvoice} toast={showToast} />;
@@ -2002,6 +2306,7 @@ export default function App() {
 
   const screenTitles = {
     dashboard: 'Dashboard', inbox: 'E-Invoice Inbox', ocr: 'OCR Upload',
+    import: 'Excel Import', settings: 'Settings',
     invoice_detail: 'Invoice Detail', match: 'PO Matching', threeway: '3-Way Match',
     pos: 'Purchase Orders', grns: 'Goods Receipts', vendors: 'Vendors',
     register: 'AP Register',
@@ -2010,17 +2315,30 @@ export default function App() {
   return (
     <>
       <Head>
-        <title>Kraya AP Automation</title>
+        <title>{companyName ? `${companyName} — Kraya AP` : 'Kraya AP Automation'}</title>
         <meta name="description" content="Accounts Payable Automation for Indian businesses" />
         <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='28'>K</text></svg>" />
       </Head>
       <div className="app-shell">
-        <Sidebar screen={screen} setScreen={(s) => { setScreen(s); }} counts={counts} />
+        <Sidebar
+          screen={screen}
+          setScreen={(s) => { setScreen(s); }}
+          counts={counts}
+          companyName={companyName}
+          userEmail={userEmail}
+        />
         <div className="main-area">
           <div className="topbar">
             <span className="topbar-title">{screenTitles[screen] || 'AP Automation'}</span>
             <div className="topbar-actions">
               <span style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'var(--mono)' }}>FY 2024–25</span>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ marginLeft: 8 }}
+                onClick={() => signOut({ callbackUrl: '/login' })}
+              >
+                Sign out
+              </button>
             </div>
           </div>
           <div className="content">

@@ -123,10 +123,15 @@ export default function Login() {
             </form>
           </div>
 
+          {router.query?.signup === 'done' && (
+            <div style={{ background: '#F0FDF4', border: '1px solid #86efac', borderRadius: 4, padding: '9px 12px', fontSize: 13, color: '#166534', marginTop: 16, textAlign: 'center' }}>
+              Workspace created! Sign in below.
+            </div>
+          )}
           <div style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: '#A09890' }}>
-            No account?{' '}
-            <a href="/setup" style={{ color: '#D8261C', textDecoration: 'none' }}>
-              Set up workspace →
+            New to Kraya?{' '}
+            <a href="/signup" style={{ color: '#D8261C', textDecoration: 'none', fontWeight: 600 }}>
+              Create workspace →
             </a>
           </div>
         </div>

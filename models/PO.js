@@ -14,7 +14,8 @@ const LineItemSchema = new mongoose.Schema({
 }, { _id: false });
 
 const POSchema = new mongoose.Schema({
-  poNo: { type: String, required: true, unique: true },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', index: true },
+  poNo: { type: String, required: true },
   poDate: Date,
   vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   vendorName: String,

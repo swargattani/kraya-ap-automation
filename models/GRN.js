@@ -13,7 +13,8 @@ const GRNLineSchema = new mongoose.Schema({
 }, { _id: false });
 
 const GRNSchema = new mongoose.Schema({
-  grnNo: { type: String, required: true, unique: true },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', index: true },
+  grnNo: { type: String, required: true },
   grnDate: Date,
   poId: { type: mongoose.Schema.Types.ObjectId, ref: 'PO' },
   invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice' },

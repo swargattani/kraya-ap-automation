@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const PayableSchema = new mongoose.Schema({
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', index: true },
   invoiceId: { type: mongoose.Schema.Types.ObjectId, ref: 'Invoice', required: true },
   vendorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor' },
   vendorName: String,

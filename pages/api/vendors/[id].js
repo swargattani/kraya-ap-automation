@@ -1,7 +1,7 @@
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '../auth/[...nextauth]';
 import { dbConnect } from '../../../lib/mongodb';
-import PO from '../../../models/PO';
+import Vendor from '../../../models/Vendor';
 
 export default async function handler(req, res) {
   const session = await getServerSession(req, res, authOptions);
@@ -12,23 +12,26 @@ export default async function handler(req, res) {
   const { id } = req.query;
 
   if (req.method === 'GET') {
-    const po = await PO.findOne({ _id: id, ...(companyId ? { companyId } : {}) }).populate('vendorId');
-    if (!po) return res.status(404).json({ error: 'PO not found' });
-    return res.json(po);
+    const vendor = await Vendor.findOne({ _id: id, ...(companyId ? { companyId } : {}) });
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    return res.json(vendor);
   }
 
   if (req.method === 'PUT') {
-    const po = await PO.findOneAndUpdate(
+    const vendor = await Vendor.findOneAndUpdate(
       { _id: id, ...(companyId ? { companyId } : {}) },
       req.body,
       { new: true, runValidators: true }
     );
-    if (!po) return res.status(404).json({ error: 'PO not found' });
-    return res.json(po);
+    if (!vendor) return res.status(404).json({ error: 'Vendor not found' });
+    return res.json(vendor);
   }
 
   if (req.method === 'DELETE') {
-    await PO.findOneAndDelete({ _id: id, ...(companyId ? { companyId } : {}) });
+    await Vendor.findOneAndUpdate(
+      { _id: id, ...(companyId ? { companyId } : {}) },
+      { active: false }
+    );
     return res.json({ ok: true });
   }
 

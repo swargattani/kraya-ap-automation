@@ -1,3 +1,5 @@
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { dbConnect } from '../../../lib/mongodb';
 import Invoice from '../../../models/Invoice';
 import PO from '../../../models/PO';
@@ -39,6 +41,10 @@ function threeWayCheck(po, invoice, grn) {
 }
 
 export default async function handler(req, res) {
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  const companyId = session.user.companyId;
+
   await dbConnect();
 
   if (req.method !== 'POST') {
@@ -49,10 +55,13 @@ export default async function handler(req, res) {
   const { action, invoiceId, poId, grnId } = req.body;
 
   if (action === 'link_po') {
-    // Link invoice to a PO
+    // Link invoice to a PO — verify both belong to same company
+    const invoiceFilter = { _id: invoiceId, ...(companyId ? { companyId } : {}) };
+    const poFilter = { _id: poId, ...(companyId ? { companyId } : {}) };
+
     const [invoice, po] = await Promise.all([
-      Invoice.findById(invoiceId),
-      PO.findById(poId),
+      Invoice.findOne(invoiceFilter),
+      PO.findOne(poFilter),
     ]);
 
     if (!invoice || !po) return res.status(404).json({ error: 'Invoice or PO not found' });
@@ -70,8 +79,9 @@ export default async function handler(req, res) {
   }
 
   if (action === 'three_way') {
+    const invoiceFilter = { _id: invoiceId, ...(companyId ? { companyId } : {}) };
     const [invoice, grn] = await Promise.all([
-      Invoice.findById(invoiceId).populate('poId'),
+      Invoice.findOne(invoiceFilter).populate('poId'),
       grnId ? GRN.findById(grnId) : Promise.resolve(null),
     ]);
 

@@ -1,5 +1,7 @@
 import formidable from 'formidable';
 import fs from 'fs';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '../auth/[...nextauth]';
 import { dbConnect } from '../../../lib/mongodb';
 import Invoice from '../../../models/Invoice';
 import Vendor from '../../../models/Vendor';
@@ -109,16 +111,20 @@ async function extractText(filePath, mimeType, originalName) {
   return data.text;
 }
 
-async function findOrCreateVendor(parsed) {
+async function findOrCreateVendor(parsed, companyId) {
   if (!parsed.vendorGSTIN && !parsed.vendorName) return null;
 
-  const filter = parsed.vendorGSTIN
-    ? { gstin: parsed.vendorGSTIN }
-    : { name: new RegExp('^' + parsed.vendorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i') };
+  const filter = { ...(companyId ? { companyId } : {}) };
+  if (parsed.vendorGSTIN) {
+    filter.gstin = parsed.vendorGSTIN;
+  } else {
+    filter.name = new RegExp('^' + parsed.vendorName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '$', 'i');
+  }
 
   let vendor = await Vendor.findOne(filter);
   if (!vendor) {
     vendor = await Vendor.create({
+      companyId,
       name: parsed.vendorName || 'Unknown Vendor',
       gstin: parsed.vendorGSTIN || '',
     });
@@ -131,6 +137,10 @@ export default async function handler(req, res) {
     res.setHeader('Allow', ['POST']);
     return res.status(405).end();
   }
+
+  const session = await getServerSession(req, res, authOptions);
+  if (!session) return res.status(401).json({ error: 'Unauthorized' });
+  const companyId = session.user.companyId;
 
   try {
     await dbConnect();
@@ -174,9 +184,10 @@ export default async function handler(req, res) {
       }
     }
 
-    const vendor = await findOrCreateVendor(parsed);
+    const vendor = await findOrCreateVendor(parsed, companyId);
 
     const invoiceData = {
+      companyId,
       irn: parsed.irn,
       invoiceNo: parsed.invoiceNo || `OCR-${Date.now()}`,
       invoiceDate: parsed.invoiceDate,
@@ -207,7 +218,7 @@ export default async function handler(req, res) {
     // Auto-match against open POs immediately after save
     let matchResult = null;
     try {
-      matchResult = await autoMatchPO({ ...invoiceData, _id: invoice._id });
+      matchResult = await autoMatchPO({ ...invoiceData, _id: invoice._id }, companyId);
     } catch (_) { /* non-fatal — invoice still saved */ }
 
     fs.unlinkSync(file.filepath);

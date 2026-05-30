@@ -2,13 +2,15 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
 const UserSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  name: { type: String },
   email: { type: String, required: true, unique: true, lowercase: true },
-  password: { type: String, required: true },
+  passwordHash: { type: String },
+  password: { type: String },
+  companyId: { type: mongoose.Schema.Types.ObjectId, ref: 'Company', index: true },
   role: {
     type: String,
-    enum: ['admin', 'accounts', 'purchase', 'stores'],
-    default: 'accounts',
+    enum: ['admin', 'user', 'accounts', 'purchase', 'stores'],
+    default: 'admin',
   },
   active: { type: Boolean, default: true },
 }, { timestamps: true });
